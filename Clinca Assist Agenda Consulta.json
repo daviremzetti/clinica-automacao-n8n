@@ -1,0 +1,593 @@
+{
+  "name": "Clinca Assist Agenda Consulta",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -4336,
+        480
+      ],
+      "id": "8450c162-f811-4987-8be8-cc5d36d7caf0",
+      "name": "Chamada"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Confirme o horário a consulta médica com o paciente",
+        "options": {
+          "systemMessage": "=# IDENTIDADE\nSeu nome é Vanessa e você é secretária da Clínica Vida Plena focada em agendamentos. \n\n# FUNÇÃO\nSua função é cuidar de agendamentos para pacientes realizarem consulta médica\nBaseado nas informações da confirmação da consulta agendada, você deve escrever uma mensagem breve e curta indicando que a consulta foi confirmada.\n\n# INSTRUÇÕES\n - Responda sempre no timezone \"America/Sao_Paulo\".\n - Não inclua na resposta o fuso horário, nem outra informação que não seja sobre a confirmação da visita ao decorado, nem notas ou observações. \n - Responda apenas a mensagem de confirmação da consulta médica.\n - Você sempre responderá no idioma que consta em <IDIOMA></IDIOMA>.\n - O seu calendário está no timezone \"America/Sao_Paulo\"\n\n# OUTPUT\n\nVocê sempre responderá exatamente no formato do exemplo abaixo, sem nenhuma outra informação ou observação a mais.\n\n<EXEMPLO>\n\nPrezado {{ $('Cria evento na agenda').item.json.summary }},\n✔️ Consulta confirmada!\n🏢 Local: Clínica Vida Plena\n📍 Endereço: Rua Afonso Pena, 722  \n📅 Dia: {{ (() => {\n    const numero_dia_semana = $('Cria evento na agenda').item.json.start.dateTime.toDateTime().weekday;\n    let dia_semana = '';\n\n    if (numero_dia_semana == 0) {\n        dia_semana = 'domingo';\n    } else if (numero_dia_semana == 1) {\n        dia_semana = 'segunda-feira';\n    }  else if (numero_dia_semana == 2) {\n        dia_semana = 'terça-feira';\n    } else if (numero_dia_semana == 3) {\n        dia_semana = 'quarta-feira';\n    } else if (numero_dia_semana == 4) {\n        dia_semana = 'quinta-feira';\n    } else if (numero_dia_semana == 5) {\n        dia_semana = 'sexta-feira';\n    } else if (numero_dia_semana == 6) {\n        dia_semana = 'sábado';\n    }\n\n    return dia_semana;\n})() }}, {{ $('Cria evento na agenda').item.json.start.dateTime.toDateTime().format('dd/MM/yyyy') }}  \n⏰ Horário: {{ $('Cria evento na agenda').item.json.start.dateTime.toDateTime().format('HH:mm') }}h\n👨‍⚕️ Médico: {{ $('Retorna id').item.json.nome }}\n\nEstamos ansiosos para recebe-lo!\n\nAtenciosamente,\nVanessa\nSecretária - Clínica Vida Plena\n</EXEMPLO>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -3008,
+        480
+      ],
+      "id": "de6b2a33-02c9-4cb9-9b49-11b8cd652d79",
+      "name": "Secretária confirmação"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $json.link }}",
+          "mode": "id"
+        },
+        "start": "={{ $('Idetifica horario').item.json.output.parseJson().inicio }}",
+        "end": "={{ $('Idetifica horario').item.json.output.parseJson().fim }}",
+        "additionalFields": {
+          "description": "=* Paciente: {{ $('Chamada').item.json.nome }}\n* Plano de saúde: {{ $('Chamada').item.json.plano_saude }}\n* Contato: {{ $('Chamada').item.json.contato.split('@')[0] }}",
+          "summary": "={{ $('Chamada').item.json.nome }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -3200,
+        480
+      ],
+      "id": "a5f73474-5d12-4e0c-b720-239c7573871f",
+      "name": "Cria evento na agenda",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "d2hGc7jFp2Rl9rW1",
+          "name": "calendar-work-less-clinica"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE conversa_stand_by\nSET finalizada = true\nWHERE contato = $1\n\n",
+        "options": {
+          "queryReplacement": "={{ [$('Chamada').item.json.contato] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2320,
+        480
+      ],
+      "id": "ad7e0e9e-66c3-4ab0-8e41-864739679ab5",
+      "name": "Finaliza conversa stand by",
+      "credentials": {
+        "postgres": {
+          "id": "arYacY27pDiHcs5s",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Finaliza atendimento\n",
+        "height": 260,
+        "width": 804,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2608,
+        416
+      ],
+      "typeVersion": 1,
+      "id": "f992aefc-fc17-4f06-b1d6-30e4977ba3d6",
+      "name": "Sticky Note23"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3056,
+        688
+      ],
+      "id": "07273738-e4de-43c2-9f29-bc05c7564f0c",
+      "name": "OpenAI Chat Model11",
+      "credentials": {
+        "openAiApi": {
+          "id": "mh3lGjR5Byg7EG6P",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Captura o valor recebido\nlet entrada = $('Chamada').first().json.medico\n// Lista fixa de médicos\nconst medicos = [\n  {\n    nome: \"Ana Carolina de Linhares\",\n    link: \"6b4fbcf1812e88772e0f188057d601e54f3fffad3a2e0fcbb619a9f82e33681d@group.calendar.google.com\",\n    especialidade: \"cardiologia\",\n  },\n  {\n    nome: \"Caroline Peixoto\",\n    link: \"9223f6caf62beb226242b16310a7dfeff6e2c9cecd45e869e0525e262e196ac2@group.calendar.google.com\",\n    especialidade: \"cardiologia\",\n  },\n];\n\n// Função de normalização de texto\nfunction normalizar(texto) {\n  return texto\n    .toLowerCase()\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\") // remove acentos\n    .replace(/\\b(dr|dra|doutor|doutora)\\b/g, \"\") // remove títulos\n    .replace(/[^a-z\\s]/g, \"\") // remove símbolos\n    .replace(/\\s+/g, \" \") // remove espaços extras\n    .trim();\n}\n\nconst nomeNormalizado = normalizar(entrada);\n\n// Encontra o médico (match em qualquer direção)\nconst medicoEncontrado = medicos.find(medico => {\n  const nomeMedico = normalizar(medico.nome);\n  return (\n    nomeMedico.includes(nomeNormalizado) ||\n    nomeNormalizado.includes(nomeMedico)\n  );\n});\n\n// Retorna o resultado completo\nreturn [\n  {\n    json: medicoEncontrado\n      ? medicoEncontrado\n      : { nome: null, link: null, especialidade: null },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3408,
+        480
+      ],
+      "id": "1c30c626-7809-467b-a413-1a4806add79f",
+      "name": "Retorna id",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Chamada').item.json.url }}/send/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "token",
+              "value": "={{ $('Chamada').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Chamada').item.json.contato.replaceAll(' ','').replaceAll('-','').replaceAll('+','') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2576,
+        480
+      ],
+      "id": "d3636013-00ae-49a5-b066-fb4d79ff5d23",
+      "name": "Envia mensagem"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3792,
+        672
+      ],
+      "id": "5172a0ec-8a2e-4dd4-8380-c4081d1f4ca0",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "mh3lGjR5Byg7EG6P",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<CLIENTE>\n{{ $('Chamada').item.json.mensagem }}\n</CLIENTE>",
+        "options": {
+          "systemMessage": "=<INSTRUCAO>\nCom base na mensagem do <CLIENTE> e o histórico de conversa obtido na **redis chat memory**, extraia **o horário escolhido pelo cliente para a consulta médica**.  \nCada consulta tem duração de 30 minutos.\n\n⚠️ **Regras importantes:**\n- **NÃO subentenda o horário**. Palavras vagas como \"manhã\", \"tarde\", \"noite\", \"mais tarde\", \"agora\", \"cedo\", etc., **não são válidas** para extração.\n- **NÃO subentenda o dia**. Se o cliente disser apenas “às 14h”, verifique se há dia mencionado no histórico. Caso contrário, **não extraia nada**.\n- **Se faltar ou estiver ambíguo o horário ou a data, retorne um JSON com os campos vazios**, conforme o formato abaixo.\n- **Interprete corretamente expressões como “quinta-feira que vem”** como a próxima quinta-feira a partir da data atual.\n- **Não retorne nenhum outro dado, apenas a data e hora da reunião**.\n\n🕐 Seu calendário está no timezone `\"America/Sao_Paulo\"`  \n📌 No resultado final, use **offset de fuso horário -03:00**, e **NÃO use \"Z\"**.\n\n📅 Para referência:\n{{ (() => {\n    const dateAndTime = `\n        - Hoje é ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').weekdayLong}, ${$now.format('dd/MM/yyyy')} - ${$now.hour.toString().padStart(2, '0')}:${$now.minute.toString().padStart(2, '0')}\n        - Amanhã será ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(1, 'days').weekdayLong}, ${$now.plus(1, 'days').format('dd/MM/yyyy')}\n        - Depois de amanhã será ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(2, 'days').weekdayLong}, ${$now.plus(2, 'days').format('dd/MM/yyyy')}\n        - ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(3, 'days').weekdayLong} será ${$now.plus(3, 'days').format('dd/MM/yyyy')}\n        - ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(4, 'days').weekdayLong} será ${$now.plus(4, 'days').format('dd/MM/yyyy')}\n        - ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(5, 'days').weekdayLong} será ${$now.plus(5, 'days').format('dd/MM/yyyy')}\n        - ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(6, 'days').weekdayLong} será ${$now.plus(6, 'days').format('dd/MM/yyyy')}\n    `;\n    return dateAndTime.trim();\n})() }}\n\n📤 **Formato de saída obrigatório:**  \nVocê **sempre** deve responder **apenas com um JSON**, com os campos `inicio` e `fim`, **sem aspas ao redor das chaves**, **sem texto adicional**.\n\n📌 **Duração da consulta:** 30 minutos a partir do horário de início.  \n📌 **Formato da data:** `YYYY-MM-DDTHH:mm:ss-03:00` (NUNCA usar `Z` no final)\n\n---\n\n### ✅ Exemplos:\n\n**Entrada**\nusuario: \"Pode ser quinta às 09:00\"  \n**Saída**\n{\n  \"inicio\": \"2025-06-12T09:00:00-03:00\",\n  \"fim\": \"2025-06-12T09:30:00-03:00\"\n}\n\n**Entrada**\nusuario: \"Quarta-feira às 14h\"  \n**Saída**\n{\n  \"inicio\": \"2025-06-11T14:00:00-03:00\",\n  \"fim\": \"2025-06-11T14:30:00-03:00\"\n}\n\n**Entrada**\nusuario: \"Pode ser amanhã de manhã\"  \n**Saída**\n{\n  \"inicio\": \"\",\n  \"fim\": \"\"\n}\n\n**Entrada**\nusuario: \"Pode ser às 15h\"  \n**Saída**\n{\n  \"inicio\": \"\",\n  \"fim\": \"\"\n}\n\n**Entrada**\nusuario: \"Quinta-feira que vem às 10:30\"  \n**Saída**\n{\n  \"inicio\": \"2025-06-19T10:30:00-03:00\",\n  \"fim\": \"2025-06-19T11:00:00-03:00\"\n}\n\n</INSTRUCAO>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -3728,
+        480
+      ],
+      "id": "5d91b090-59e8-459b-a7ca-9c42bd1276d5",
+      "name": "Idetifica horario"
+    },
+    {
+      "parameters": {
+        "content": "## Agendar visita",
+        "height": 440,
+        "width": 580,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3248,
+        400
+      ],
+      "typeVersion": 1,
+      "id": "043aa698-214d-4e19-9d76-d37fabdac72f",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=context{{ $('Chamada').item.json.contato }}",
+        "sessionTTL": 1209600,
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        -2816,
+        704
+      ],
+      "id": "0ae4dcf7-72a1-48b5-98df-7f69ed7f7f8c",
+      "name": "Redis Chat Memory3",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=context{{ $('Chamada').item.json.contato }}",
+        "sessionTTL": 1209600,
+        "contextWindowLength": 30
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        -3600,
+        688
+      ],
+      "id": "fe713b5f-ec17-4abe-a216-1e7b8e2cee29",
+      "name": "Redis Chat Memory1",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO consultas (cliente, medico, especialidade, agendamento, plano_saude, medico_especifico)\nVALUES ($1, $2, $3, $4, $5, $6)\nON CONFLICT (cliente, agendamento) DO UPDATE SET\n  cliente = $1,\n  medico = $2,\n  especialidade = $3,\n  agendamento = $4,\n  plano_saude = $5,\n  medico_especifico = $6\nRETURNING *",
+        "options": {
+          "queryReplacement": "={{ [$('Chamada').item.json.id, $('Chamada').item.json.medico, $('Chamada').item.json.especialidade, $('Idetifica horario').item.json.output.parseJson().inicio, $('Chamada').item.json.plano_saude, $('Chamada').item.json.medico_preferencia] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2080,
+        480
+      ],
+      "id": "417b9bf2-f83b-4829-bde2-89110330ed9a",
+      "name": "Cadastra ou atualiza consulta",
+      "credentials": {
+        "postgres": {
+          "id": "arYacY27pDiHcs5s",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=dados{{ $('Chamada').item.json.contato }}",
+        "value": "={{ JSON.stringify({\n  nome: $json.nome || null,\n  cpf: $json.cpf_cnpj || null,\n  nascimento: $json.nascimento || null,\n  possui_cadastro: $json.possui_cadastro || null,\n  plano_saude: $json.plano_saude || null,\n  especialidade: $json.especialidade || null,\n  medico_preferencia: $json.medico_preferencia || null,\n  nome_medico: $json.medico || null,\n  status_conversa: $json.status_conversa || null\n}) }}\n"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -3920,
+        480
+      ],
+      "id": "550bbed1-94b4-4780-ae12-9ed64389656d",
+      "name": "atualiza status",
+      "alwaysOutputData": true,
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5174c4c-e6ce-4552-9afe-b46164d00df7",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "e9d75524-1ce5-4af2-b041-8e4b337b1e5a",
+              "name": "cpf_cnpj",
+              "value": "={{ $json.cpf_cnpj }}",
+              "type": "string"
+            },
+            {
+              "id": "ec58b727-200d-4381-8de6-e203453f7345",
+              "name": "nome",
+              "value": "={{ $json.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "695eeb81-1bb1-4bfc-b311-908c2ba5eac2",
+              "name": "nascimento",
+              "value": "={{ $json.nascimento }}",
+              "type": "string"
+            },
+            {
+              "id": "15c39565-7fb2-4479-a037-90a9e9f72384",
+              "name": "contato",
+              "value": "={{ $json.contato }}",
+              "type": "string"
+            },
+            {
+              "id": "d3b6e168-31c1-45a1-b519-37088a35864a",
+              "name": "possui_cadastro",
+              "value": "={{ $json.possui_cadastro }}",
+              "type": "string"
+            },
+            {
+              "id": "8bbdc8a5-6bb9-4470-a70e-ecb8ac1ccd51",
+              "name": "plano_saude",
+              "value": "={{ $json.plano_saude }}",
+              "type": "string"
+            },
+            {
+              "id": "2f5bbc38-02d0-4c80-8d25-d22ed30e5291",
+              "name": "medico_preferencia",
+              "value": "={{ $json.medico_preferencia }}",
+              "type": "string"
+            },
+            {
+              "id": "09011f6c-3dc4-4a24-8d62-f9b3f069cdc7",
+              "name": "medico",
+              "value": "={{ $json.medico }}",
+              "type": "string"
+            },
+            {
+              "id": "10c1ad9b-375a-48c7-9ec3-feb080a1ab3e",
+              "name": "especialidade",
+              "value": "={{ $json.especialidade }}",
+              "type": "string"
+            },
+            {
+              "id": "d89df210-97f1-4260-86bd-38d6ea2b91f1",
+              "name": "status_conversa",
+              "value": "=encerrado",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4112,
+        480
+      ],
+      "id": "843a191a-36df-4412-8f82-770a18fb523a",
+      "name": "Dados consulta2"
+    }
+  ],
+  "pinData": {
+    "Chamada": [
+      {
+        "json": {
+          "id": 70,
+          "cpf_cnpj": "05073372980",
+          "nome": "Davi Regis",
+          "nascimento": "1986-06-06",
+          "contato": "554884508723@s.whatsapp.net",
+          "possui_cadastro": "sim",
+          "plano_saude": "particular",
+          "medico_preferencia": "sim",
+          "medico": "Ana Carolina de Linhares",
+          "especialidade": "cardiologista",
+          "status_conversa": "encerrado",
+          "mensagem": "Pode ser amanhã as onze e meia",
+          "url": "https://work-less-ai.uazapi.com",
+          "token": "8b4701cb-f821-47f0-9c55-69fbf9069eb0",
+          "id_conversa": "554891632926:3EB0E1883FCC3A474D072A"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Chamada": {
+      "main": [
+        [
+          {
+            "node": "Dados consulta2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Secretária confirmação": {
+      "main": [
+        [
+          {
+            "node": "Envia mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria evento na agenda": {
+      "main": [
+        [
+          {
+            "node": "Secretária confirmação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finaliza conversa stand by": {
+      "main": [
+        [
+          {
+            "node": "Cadastra ou atualiza consulta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model11": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Secretária confirmação",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retorna id": {
+      "main": [
+        [
+          {
+            "node": "Cria evento na agenda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia mensagem": {
+      "main": [
+        [
+          {
+            "node": "Finaliza conversa stand by",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Idetifica horario",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Idetifica horario": {
+      "main": [
+        [
+          {
+            "node": "Retorna id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory3": {
+      "ai_memory": [
+        [
+          {
+            "node": "Secretária confirmação",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Idetifica horario",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "atualiza status": {
+      "main": [
+        [
+          {
+            "node": "Idetifica horario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados consulta2": {
+      "main": [
+        [
+          {
+            "node": "atualiza status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "dbe1e3f8-a730-4927-bfa7-79490296226c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a70a1343a03530a452f4dec61f49dcb55af90d675b64a06d66352538d4bcf3b4"
+  },
+  "id": "sfGjr2MpSoaPw3ua",
+  "tags": []
+}
