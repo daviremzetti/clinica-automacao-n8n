@@ -1,0 +1,77 @@
+{
+  "name": "Clinica Finaliza agendamentos",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 8-20 * * 1-5"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 9-21 * * 1-5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b69a919a-c76b-4a0c-bf7e-5b3d3b5b688f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE consultas\nSET finalizada = true\nWHERE agendamento < '{{ $json.timestamp }}'\n  AND finalizada = false;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "553f8e54-92fb-4d77-82cf-264ad811bcbe",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "arYacY27pDiHcs5s",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "91bbb949-11ed-4e3f-8b83-d9aba6500807",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a70a1343a03530a452f4dec61f49dcb55af90d675b64a06d66352538d4bcf3b4"
+  },
+  "id": "YIrbtdVRiJrhpG7R",
+  "tags": []
+}

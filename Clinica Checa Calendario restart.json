@@ -1,0 +1,147 @@
+{
+  "name": "Clinica Checa Calendario restart",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Ey7BRHQTC0SH6LFh",
+          "mode": "list",
+          "cachedResultName": "Clinica Assist Checa Calendario"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        0
+      ],
+      "id": "77e1d9cb-b269-44c9-b27a-977cfd707327",
+      "name": "Chama checa calendario"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "78f1be31-d00d-4df6-8ed1-24f9a6de5e51",
+      "name": "Chamada"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "96dc9183-f64f-41fd-8007-aefaa4e46576",
+              "name": "numero",
+              "value": "={{ $('Chamada').item.json.numero }}",
+              "type": "string"
+            },
+            {
+              "id": "afec8db7-fe53-4f68-af16-89cd48ad3c5b",
+              "name": "url",
+              "value": "={{ $('Chamada').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "78ac8549-15c0-4357-a589-ceb7ddf0e1d5",
+              "name": "token",
+              "value": "={{ $('Chamada').item.json.token }}",
+              "type": "string"
+            },
+            {
+              "id": "ba1e2edc-7897-4b19-8692-2ea64c0e1da0",
+              "name": "especialidade",
+              "value": "={{ $('Chamada').item.json.especialidade }}",
+              "type": "string"
+            },
+            {
+              "id": "a93a13c9-67d1-4c31-86a4-e0760ca11a93",
+              "name": "medico",
+              "value": "={{ $('Chamada').item.json.medico }}",
+              "type": "string"
+            },
+            {
+              "id": "fdd4e0c4-3caf-48ae-b78b-4878a455ddc6",
+              "name": "medico_preferencia",
+              "value": "={{ $('Chamada').item.json.medico_especifico }}",
+              "type": "string"
+            },
+            {
+              "id": "d29aa331-87b6-469e-bd0a-ba2b8be6f23c",
+              "name": "data",
+              "value": "={{ $('Chamada').item.json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "72b473f1-7c11-4f9a-8476-09aa74b95183",
+              "name": "id",
+              "value": "={{ $('Chamada').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d9093813-e902-4927-aaea-6bc466fe0dbe",
+      "name": "Dados"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chamada": {
+      "main": [
+        [
+          {
+            "node": "Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados": {
+      "main": [
+        [
+          {
+            "node": "Chama checa calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2e218818-9219-4ad5-8eef-c0ff3771c040",
+  "meta": {
+    "instanceId": "a70a1343a03530a452f4dec61f49dcb55af90d675b64a06d66352538d4bcf3b4"
+  },
+  "id": "73zVRPxZi4n8fzsV",
+  "tags": []
+}

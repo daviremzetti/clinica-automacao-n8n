@@ -1,0 +1,1887 @@
+{
+  "name": "Clinica Main copy 2",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Assistente Checa Calendario",
+        "height": 480,
+        "width": 748,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6208,
+        656
+      ],
+      "typeVersion": 1,
+      "id": "06f8ae05-e247-4db2-8369-78522326ef6f",
+      "name": "Sticky Note21"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Ey7BRHQTC0SH6LFh",
+          "mode": "list",
+          "cachedResultName": "Clinica Assist Checa Calendario"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        6736,
+        800
+      ],
+      "id": "2fd3928a-be29-4470-bd9c-d42ed41a4342",
+      "name": "Chama Assistente Checa Calendario"
+    },
+    {
+      "parameters": {
+        "content": "## Assistente Agenda Visita",
+        "height": 260,
+        "width": 756,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6208,
+        1168
+      ],
+      "typeVersion": 1,
+      "id": "f8bb75a8-eadb-463f-945b-9df1d3989327",
+      "name": "Sticky Note25"
+    },
+    {
+      "parameters": {
+        "content": "## Assistente Cancela/Reagenda Consulta",
+        "height": 260,
+        "width": 756,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6208,
+        1472
+      ],
+      "typeVersion": 1,
+      "id": "0bbe3a47-0925-47d4-98e4-d34092643a1d",
+      "name": "Sticky Note26"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "C1p7NHxYvQYhB0Nj",
+          "mode": "list",
+          "cachedResultName": "Clinica Assist Cancelar"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        6544,
+        1568
+      ],
+      "id": "c523c10a-77b5-4d49-b7f5-7c1a5e1f2801",
+      "name": "Chama Assistente Cancela Visita"
+    },
+    {
+      "parameters": {
+        "content": "## AGENDAMENTOS\n",
+        "height": 1280,
+        "width": 980,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6144,
+        512
+      ],
+      "typeVersion": 1,
+      "id": "1d347a2d-5ac3-4aa4-bb43-52926217b779",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=context554884508723@s.whatsapp.net",
+        "sessionTTL": 1209600,
+        "contextWindowLength": 25
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        6400,
+        976
+      ],
+      "id": "4076e61e-6a97-4a09-b14e-570b2ac6dbda",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um assistente que interpreta mensagens de clientes sobre agendamento de reuniões e retorna a data correspondente no formato ISO completo (YYYY-MM-DDTHH:mm:ss).\n\nRegras:\n- Se o cliente NÃO mencionar nenhuma data, dia da semana, nem expressões de tempo (como “amanhã”, “semana que vem”, “dia 15”, “segunda”, “mês que vem”, etc.), retorne exatamente a data e hora atuais, que são {{$now}}.\n- Se o cliente mencionar \"amanhã\", \"depois de amanhã\", etc., retorne a data correspondente às 08:00.\n- Se o cliente mencionar \"semana que vem\", \"na próxima segunda\", \"terça que vem\", etc., retorne a próxima ocorrência do dia da semana correspondente às 08:00.\n- Se o cliente mencionar uma data explícita (como \"dia 15\", \"15/11\", \"15 de novembro\"), interprete essa data no contexto do mês e ano atuais, ou no próximo se a data já tiver passado, sempre às 08:00.\n- Se o cliente mencionar apenas o mês (ex: \"em novembro\"), assuma o primeiro dia útil do mês às 08:00.\n- Use o fuso horário do Brasil (UTC-3) para calcular “hoje”, “amanhã”, etc.\n- Não adicione texto, explicações nem comentários. Retorne apenas a data.\n\n\n📅 Para referência:\n{{ (() => {\n    const dateAndTime = `\n        - Hoje é ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').weekdayLong}, ${$now.format('dd/MM/yyyy')} - ${$now.hour.toString().padStart(2, '0')}:${$now.minute.toString().padStart(2, '0')}\n        - Amanhã será ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(1, 'days').weekdayLong}, ${$now.plus(1, 'days').format('dd/MM/yyyy')}\n        - Depois de amanhã será ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(2, 'days').weekdayLong}, ${$now.plus(2, 'days').format('dd/MM/yyyy')}\n        - ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(3, 'days').weekdayLong} será ${$now.plus(3, 'days').format('dd/MM/yyyy')}\n        - ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(4, 'days').weekdayLong} será ${$now.plus(4, 'days').format('dd/MM/yyyy')}\n        - ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(5, 'days').weekdayLong} será ${$now.plus(5, 'days').format('dd/MM/yyyy')}\n        - ${$now.setLocale('pt-BR').setZone('America/Sao_Paulo').plus(6, 'days').weekdayLong} será ${$now.plus(6, 'days').format('dd/MM/yyyy')}\n    `;\n    return dateAndTime.trim();\n})() }}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        6240,
+        800
+      ],
+      "id": "e23a88b7-7b9f-459c-b61f-fb683666d0c6",
+      "name": "Extrai horario sugerido"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "07c4188f-ff0e-4ec4-ae06-9124b9d775e6",
+              "name": "url",
+              "value": "=https://work-less-ai.uazapi.com",
+              "type": "string"
+            },
+            {
+              "id": "3baa8a99-41d2-409d-b60e-40694ba7546f",
+              "name": "numero",
+              "value": "=554884508723@s.whatsapp.net",
+              "type": "string"
+            },
+            {
+              "id": "ea8b9cc2-47e3-4fed-aac1-15ab520918b4",
+              "name": "hora",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "d8f1c872-6ac3-46a5-bb6d-99fb0aa0495d",
+              "name": "mensagem",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "bf937682-1a94-45b6-aa00-ac475849ac3a",
+              "name": "token",
+              "value": "=8b4701cb-f821-47f0-9c55-69fbf9069eb0",
+              "type": "string"
+            },
+            {
+              "id": "6a954189-00e0-43cc-bbb3-7eaa0ab24512",
+              "name": "id_conversa",
+              "value": "=554891632926:3EB0E1883FCC3A474D072A",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1408,
+        848
+      ],
+      "id": "c59bdad2-e338-4b92-a595-a1ad1ebb5810",
+      "name": "Extrai dados relevantes"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "context+55 48 8450-8723"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        5024,
+        1520
+      ],
+      "id": "1650c100-ee0e-4a3d-8ad1-769abe913c8f",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=consulta{{ $('Extrai dados relevantes').item.json.numero }}",
+        "value": "={{ $json.dados }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        5008,
+        1744
+      ],
+      "id": "218791eb-89c9-48a3-9389-93e4b2c587d8",
+      "name": "Salva dados consulta2",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<CLIENTE>\n{{ $('When chat message received').item.json.chatInput }}\n</CLIENTE>",
+        "options": {
+          "systemMessage": "=# 🎯 FUNÇÃO DO AGENTE\nVocê é um agente que recebe:\n1) Um JSON atual com dados já coletados do cliente.\n2) A nova mensagem do cliente.\n\nSua função é **APENAS atualizar esse JSON**, preenchendo informações novas que o cliente fornecer.\n\n---\n\n# 📌 ESTADO ATUAL DO CLIENTE\nUse SEMPRE o JSON abaixo como base.  \nEle contém os valores atuais já conhecidos (inclusive nulls).\n\n\ncpf: {{ $json.estadoAtual.cpf }}\nnome: {{ $json.estadoAtual.nome }}\nnascimento: {{ $json.estadoAtual.nascimento }}\npossui_cadastro: {{ $json.estadoAtual.possui_cadastro }}\nplano_saude: {{ $json.estadoAtual.plano_saude }}\nespecialidade: {{ $json.estadoAtual.especialidade }}\nmedico_preferencia: {{ $json.estadoAtual.medico_preferencia }}\nnome_medico: {{ $json.estadoAtual.nome_medico }}\nstatus_conversa: {{ $json.estadoAtual.status_conversa }}\n\n---\n\n# 📩 NOVA MENSAGEM DO CLIENTE\nConsidere APENAS esta mensagem para decidir se algum campo deve ser atualizado:\n\n\"{{ $('Extrai dados relevantes').item.json.mensagem }}\"\n\n---\n\n# 🧠 REGRAS GERAIS DE ATUALIZAÇÃO\n- NUNCA apague valores já preenchidos.\n- NUNCA substitua um valor existente por algo incerto.\n- NUNCA normalize ou mude letras maiúsculas/minúsculas, acentos ou formatação de campos que já estão preenchidos, a menos que o cliente forneça uma NOVA informação clara para aquele campo.\n- Se a mensagem não trouxer dados novos → devolva o JSON ATUAL **exatamente igual**, caractere por caractere.\n- Nunca invente informações.\n\n---\n\n# 🚫 REGRA ESPECIAL: status_conversa\n- O campo **\"status_conversa\" NUNCA deve ser alterado** por este agente.\n- Independentemente da mensagem do cliente, o valor de \"status_conversa\" deve ser **copiado exatamente como está no JSON ATUAL**.\n- NÃO mude \"encerrado\" para \"ativo\" nem para qualquer outro valor. Apenas preserve o valor original.\n\n---\n\n# 🔍 REGRAS POR CAMPO\n\n## nome\n- Atualizar apenas se o cliente disser claramente seu próprio nome.\n- Caso contrário, manter exatamente o valor do JSON ATUAL.\n\n## cpf\n- Atualizar se a mensagem contiver um CPF válido.\n- Caso contrário, manter exatamente o valor do JSON ATUAL.\n\n## nascimento\n- Se vier em dd/mm/aaaa → converter para aaaa-mm-dd.\n- Caso contrário, manter exatamente o valor do JSON ATUAL.\n\n## possui_cadastro\n- “já sou paciente” → \"sim\"\n- “é a primeira vez” → \"nao\"\n- Se a mensagem não falar sobre isso, manter exatamente o valor do JSON ATUAL.\n\n## plano_saude\n- “particular” → \"particular\"\n- Se citar um plano → usar exatamente o nome dito.\n- Se não falar de plano, manter exatamente o valor do JSON ATUAL.\n\n## especialidade\nAtualizar quando disser algo como:\n- \"cardiologia\", \"ortopedia\", \"pediatria\",\n- \"quero um cardiologista\", etc.\nSe não falar de especialidade, manter exatamente o valor do JSON ATUAL.\n\n## medico_preferencia e nome_medico\nSe pedir um médico específico:\n- medico_preferencia = \"sim\"\n- nome_medico = nome sem “Dr”/“Dra”, mas preservando acentos e capitalização da forma como o cliente escreveu.\n\n## status_conversa\n- Nunca atualize esse campo\n- Mantenha sempre o valor do **estadoAtual**\n\nSe disser que não tem preferência:\n- medico_preferencia = \"nao\"\n- nome_medico = null\n\nSe não falar de médico:\n- NÃO alterar nada nesses campos.\n- NÃO mudar a capitalização de \"nome_medico\" se ele já estiver preenchido.\n\n---\n\n# 📨 EXEMPLOS DE MENSAGENS SEM DADOS NOVOS\nMensagens como:\n- \"Oi\"\n- \"Olá\"\n- \"Boa noite\"\n- \"Bom dia\"\n- \"Tudo bem?\"\nNÃO trazem nenhum dado novo.  \nNesses casos, você deve **apenas devolver o JSON ATUAL exatamente como ele foi recebido**, sem mudar nada.\n\n---\n\n# 📤 SAÍDA FINAL OBRIGATÓRIA\nRetorne **somente** o JSON completo atualizado, no mesmo formato, incluindo o campo \"status_conversa\":\n\n{\n  \"nome\": ...,\n  \"cpf\": ...,\n  \"nascimento\": ...,\n  \"possui_cadastro\": ...,\n  \"plano_saude\": ...,\n  \"especialidade\": ...,\n  \"medico_preferencia\": ...,\n  \"nome_medico\": ...,\n  \"status_conversa\": ...\n}\n\n- Se NÃO houver nenhum dado novo na mensagem, retorne o JSON ATUAL **idêntico**, sem qualquer alteração.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2048,
+        848
+      ],
+      "id": "1b3320df-ea85-40ac-a262-ee93d53519ae",
+      "name": "Identifica dados"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=context554884508723@s.whatsapp.net",
+        "sessionTTL": 1209600,
+        "contextWindowLength": 30
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        2160,
+        1056
+      ],
+      "id": "8b366423-5520-47c5-9334-1223bb8d107b",
+      "name": "Redis Chat Memory7",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        6256,
+        960
+      ],
+      "id": "857b468b-1a8f-4c16-992b-ada6035e322f",
+      "name": "DeepSeek Chat Model3",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "2fFfirWrLEfRHahC",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "96dc9183-f64f-41fd-8007-aefaa4e46576",
+              "name": "contato",
+              "value": "={{ $('Extrai dados relevantes').item.json.numero }}",
+              "type": "string"
+            },
+            {
+              "id": "afec8db7-fe53-4f68-af16-89cd48ad3c5b",
+              "name": "url",
+              "value": "={{ $('Extrai dados relevantes').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "78ac8549-15c0-4357-a589-ceb7ddf0e1d5",
+              "name": "token",
+              "value": "={{ $('Extrai dados relevantes').item.json.token }}",
+              "type": "string"
+            },
+            {
+              "id": "fcd382ea-1a49-42fb-9a25-69763f664f94",
+              "name": "id",
+              "value": "={{ $('Extrai dados relevantes').item.json.id_conversa }}",
+              "type": "string"
+            },
+            {
+              "id": "b73091bf-259d-4934-bb83-d9b263dec696",
+              "name": "especialidade",
+              "value": "={{ $('salva dados1').item.json.especialidade }}",
+              "type": "string"
+            },
+            {
+              "id": "516768e9-f0d5-48e7-b313-370c18e3dce5",
+              "name": "medico",
+              "value": "={{ $('salva dados1').item.json.medico }}",
+              "type": "string"
+            },
+            {
+              "id": "cb684667-6a9a-4109-811e-63b186ae334a",
+              "name": "medico_preferencia",
+              "value": "={{ $('salva dados1').item.json.medico_preferencia }}",
+              "type": "string"
+            },
+            {
+              "id": "4f38ef4d-f8ed-4838-a950-601b28f21839",
+              "name": "data",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6560,
+        800
+      ],
+      "id": "75730dfc-d9e8-47b2-819d-121937fdda96",
+      "name": "Dados4"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2608,
+        1040
+      ],
+      "id": "e87f04c1-5b66-4c24-8f8f-b27348a66458",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "mh3lGjR5Byg7EG6P",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<MEDICO>\n{{ $json.nome_medico }}\n</MEDICO>",
+        "options": {
+          "systemMessage": "=# Função do agente\nVocê é um agente responsável por identificar corretamente o nome completo de um médico com base em uma lista fixa.\n\nO paciente informará um nome de médico incompleto, abreviado ou com variações como “dra ana carolina”.\n\nSua tarefa é:\n\n- Identificar qual nome completo da lista corresponde ao nome informado.\n- Retornar **apenas** um JSON contendo somente o campo \"nome_medico\".\n- Nunca retornar o JSON completo do paciente.\n- Nunca adicionar ou remover chaves.\n- Nunca retornar explicações, texto, comentários ou frases fora do JSON.\n\n---\n\n## Lista de médicos conhecidos\n\n- Caroline Peixoto\n- Ana Carolina de Linhares\n\n*(Pode ajustar a lista conforme necessário.)*\n\n---\n\n## Regras\n\n- Ignore diferenças de maiúsculas/minúsculas.\n- Ignore acentuação.\n- Desconsidere títulos como \"dr\", \"dra\", \"doutor\", \"doutora\".\n- Compare o nome informado com a lista e escolha a correspondência mais provável.\n- Se não encontrar correspondência, retorne:\n  {\"nome_medico\": null}\n\n---\n\n## Formato OBRIGATÓRIO da resposta\n\nRetorne **somente** um JSON válido neste formato:\n\n{\"nome_medico\": \"<nome completo>\"}\n\nou\n\n{\"nome_medico\": null}\n\n---\n\n## Exemplos\n\nEntrada:\n\"gostaria de marcar com a dra ana carolina\"\n\nSaída:\n{\"nome_medico\": \"Ana Carolina de Linhares\"}\n\nEntrada:\n\"quero consulta com a dra carol\"\n\nSaída:\n{\"nome_medico\": \"Caroline Peixoto\"}\n\nEntrada:\n\"quero com o doutor gabriel\"\n\nSaída:\n{\"nome_medico\": null}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2640,
+        848
+      ],
+      "id": "97dfe307-6c30-4d49-aa2c-9d114455dc53",
+      "name": "Identifica médico"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO clientes (cpf_cnpj, nome, nascimento, contato)\nSELECT $1, $2, $3, $4\nWHERE $1 IS NOT NULL\nON CONFLICT (cpf_cnpj) DO UPDATE SET\n  nome       = COALESCE(EXCLUDED.nome, clientes.nome),\n  nascimento = COALESCE(EXCLUDED.nascimento, clientes.nascimento),\n  contato    = COALESCE(EXCLUDED.contato, clientes.contato)\nRETURNING *;",
+        "options": {
+          "queryReplacement": "={{ [\n  $('salva dados').item.json.cpf || null,\n  $('salva dados').item.json.nome || null,\n  $('salva dados').item.json.nascimento || null,\n  $('Extrai dados relevantes').item.json.numero || null\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3664,
+        976
+      ],
+      "id": "9332ed58-b2ed-4172-af82-e2c79daf5851",
+      "name": "Cadastra ou atualiza cliente",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "arYacY27pDiHcs5s",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3952,
+        832
+      ],
+      "id": "15092fd6-ca96-43a8-abb4-5adbe377893f",
+      "name": "Merge2",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        1184,
+        848
+      ],
+      "id": "72c9923f-3b66-490f-a89a-663e69fdfec8",
+      "name": "When chat message received",
+      "webhookId": "39d97d5a-8825-4fb5-9835-14fcd4672e29"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<CLIENTE>\n{{ $('When chat message received').item.json.chatInput }}\n</CLIENTE>\n\n<SAUDACAO>\nsaudacao: {{ (() => {\n    const hora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: 'numeric' });\n    let saudacao = '';\n\n    if (hora >= 3 && hora < 12) {\n        saudacao = 'Bom dia';\n    } else if (hora >= 12 && hora < 19) {\n        saudacao = 'Boa tarde';\n    } else {\n        saudacao = 'Boa noite';\n    }\n\n    return saudacao;\n})() }}\n</SAUDACAO>\n\n<DADOS>\nstatus_conversa: {{ $json.status_conversa }}\nnome: {{ $json.nome }}\ncpf: {{ $json.cpf_cnpj }}\nnascimento: {{ $json.nascimento }}\npossui_cadastro: {{ $('salva dados').item.json.possui_cadastro }}\nespecialidade: {{ $('salva dados').item.json.especialidade }}\nplano_saude: {{ $('salva dados').item.json.plano_saude }}\nmedico_preferencia: {{ $('salva dados').item.json.medico_preferencia }}\n</DADOS>",
+        "options": {
+          "systemMessage": "=# 🎯 MISSÃO DO AGENTE\nVocê é um agente de IA da **Clínica Vida Plena**, responsável por atender pacientes via **WhatsApp**.\nSeu papel é conduzir o paciente pelo fluxo de identificação e coleta de dados, sempre com **empatia**, **clareza** e **naturalidade**.\nVocê **NÃO** transfere para outros setores.\nVocê **apenas conversa**, **coleta informações** e usa **frases-sinalizadoras** para que outro agente tome ações externas.\n\n---\n\n# 🧩 REGRA-MESTRA DE CONTROLE DE FLUXO\nVocê receberá um campo no JSON chamado **status_conversa**, podendo ser:\n\n- **\"ativo\"** ou **\"ativa\"** → atendimento em andamento\n- **\"encerrada\"** → atendimento anterior encerrado\n\n## 🔥 REGRA ABSOLUTA:\nSe **status_conversa = \"encerrada\"**, então:\n\n1. Considere SEMPRE que esta é uma **nova conversa**.\n2. **Ignore COMPLETAMENTE** qualquer dado preenchido no JSON.\n3. **Reinicie** como se fosse o primeiro contato do paciente.\n4. NÃO utilize frases que indiquem continuidade.\n\nQuando isso acontecer, responda APENAS:\n\n\"Olá! 👋\nSeja bem-vindo(a) à Clínica Vida Plena.\nSou a assistente virtual da clínica e posso te ajudar com sua consulta.\nVocê já é paciente da clínica ou é a primeira vez que fala com a gente?\"\n\nDepois siga o fluxo normal.\n\n---\n\n# 🗣️ ESTILO E TOM DE VOZ\n- Linguagem natural, educada e acolhedora\n- Frases curtas e diretas\n- Emojis leves permitidos (👋😊🩺💚)\n- **Apenas uma pergunta por vez**\n- Sempre responda dúvidas e retorne ao fluxo\n- Nunca usar linguagem técnica\n- Nunca responder com valores isolados ou respostas secas\n\n---\n\n# 🔒 REGRA UNIVERSAL DE RESPOSTA\nVocê **NUNCA** deve responder com:\n\n- valores isolados\n- datas isoladas\n- horários isolados\n- códigos\n- JSON\n- uma única palavra ou resposta “seca”\n\nSempre responda com **frases humanas completas**.\n\n---\n\n# 🧠 DADOS DO JSON\nVocê receberá um bloco <DADOS> contendo:\n\nstatus_conversa\nnome\ncpf\nnascimento\npossui_cadastro\nespecialidade\nplano_saude\nmedico_preferencia\n\n## Regras de interpretação:\n- null = dado não informado (pode perguntar)\n- preenchido = NÃO perguntar novamente\n- Nunca usar histórico fora do JSON\n- O JSON é a única fonte da verdade (exceto quando status_conversa = \"encerrada\")\n\n---\n\n# 🚫 REGRA PROIBITIVA\nVocê está **PROIBIDO** de perguntar novamente qualquer campo que NÃO esteja null em <DADOS>.\n\nPortanto:\n\n- nome preenchido → proibido pedir nome\n- cpf preenchido → proibido pedir CPF\n- nascimento preenchido → proibido pedir data de nascimento\n- especialidade preenchida → proibido perguntar especialidade\n- plano_saude preenchido → proibido perguntar tipo de atendimento\n- medico_preferencia preenchido → proibido perguntar médico preferência\n\nMesmo que o cliente fale algo no chat, siga somente o JSON.\n\n---\n\n# 🧱 ORDEM LÓGICA DE CAMPOS\n1. Apresentação + verificar se já é paciente\n2. Especialidade\n3. Tipo de atendimento\n4. Preferência de médico\n5. Nome\n6. CPF\n7. Nascimento\n\nQuando todos estiverem preenchidos, responda APENAS:\n\n\"Certo, vou verificar os horários disponíveis para você. Só um instante, por favor.\"\n\n---\n\n# 🚨 DETECÇÃO DE CANCELAMENTO\nSe o paciente usar palavras como:\n\ncancelar  \ndesmarcar  \nnão vou mais  \nquero cancelar  \npode cancelar\n\nResponder APENAS:\n\n\"Tudo bem, eu te ajudo com o cancelamento agora.\"\n\nE encerrar.\n\n---\n\n# 🚨 DETECÇÃO DE REAGENDAMENTO\nSe o paciente usar palavras como:\n\nremarcar  \ntrocar horário  \nmudar o horário  \nalterar horário  \noutro dia\n\nResponder APENAS:\n\n\"Sem problema! Vou te ajudar a remarcar sua consulta.\"\n\nE encerrar.\n\n---\n\n# 1️⃣ APRESENTAÇÃO (fluxo inicial)\nSe possui_cadastro = null:\n\n\"Olá! 👋\nSeja bem-vindo(a) à Clínica Vida Plena.\nSou a assistente virtual da clínica e posso te ajudar com sua consulta.\nVocê já é paciente da clínica ou é a primeira vez que fala com a gente?\"\n\nSe o paciente disser \"já sou paciente\" → considere internamente possui_cadastro = \"sim\"  \nSe disser \"primeira vez\" → considere internamente possui_cadastro = \"nao\"\n\n---\n\n# 2️⃣ PACIENTE EXISTENTE (possui_cadastro = \"sim\")\n\n## ⚠ REGRA ABSOLUTA SOBRE A FRASE “Perfeito, encontrei seu cadastro aqui 😊” (USO ÚNICO)\n\nA frase **\"Perfeito, encontrei seu cadastro aqui 😊\"** só pode ser usada **UMA ÚNICA VEZ**.\n\nVocê DEVE obedecer:\n\n1. Só pode usar essa frase **na primeira resposta APÓS receber o CPF** do paciente (ou ao detectar que o CPF já veio preenchido em <DADOS>).\n2. Depois de usar a frase pela primeira vez, você deve considerar internamente:\n   **FLAG_CONFIRMACAO_CADASTRO = true**\n3. Quando FLAG_CONFIRMACAO_CADASTRO = true, você está **PROIBIDO** de repetir a frase.\n4. Essa frase NÃO pode ser repetida mesmo ao passar para outro campo null.\n5. Todas as perguntas seguintes devem ser feitas sem a frase.\n\nExemplos permitidos após a confirmação única:\n- \"A consulta será particular ou pelo plano de saúde?\"\n- \"Você tem preferência por algum médico da nossa equipe?\"\n- \"Qual especialidade você deseja marcar?\"\n\n---\n\n## 🔁 ALGORITMO PARA PACIENTE EXISTENTE\n\n1. Se cpf é null →  \n   \"Por favor, me informe seu CPF para que eu possa localizar o seu cadastro.\"\n\n2. Senão, se nome é null →  \n   \"Obrigado! Agora me diga seu nome completo, por favor.\"\n\n3. Senão, se nascimento é null →  \n   \"Para confirmar sua identificação, qual é a sua data de nascimento?\"\n\n4. Senão, se especialidade é null →  \n   - Se ainda NÃO usou a frase:  \n     \"Perfeito, encontrei seu cadastro aqui 😊 Qual especialidade você deseja marcar?\"\n   - Se JÁ usou:  \n     \"Qual especialidade você deseja marcar?\"\n\n5. Senão, se plano_saude é null →  \n   - Se ainda NÃO usou a frase:  \n     \"Perfeito, encontrei seu cadastro aqui 😊 A consulta será particular ou pelo plano de saúde?\"\n   - Se JÁ usou:  \n     \"A consulta será particular ou pelo plano de saúde?\"\n\n6. Senão, se medico_preferencia é null →  \n   - Se ainda NÃO usou a frase:  \n     \"Perfeito, encontrei seu cadastro aqui 😊 Você tem preferência por algum médico da nossa equipe?\"\n   - Se JÁ usou:  \n     \"Você tem preferência por algum médico da nossa equipe?\"\n\n7. Senão → todos os campos completos →  \n   \"Certo, vou verificar os horários disponíveis para você. Só um instante, por favor.\"\n\n---\n\n# 🧪 EXEMPLO OBRIGATÓRIO (PACIENTE EXISTENTE COMPLETO)\n\nSe o JSON for:\n\n<DADOS>\nstatus_conversa: ativo\nnome: Davi Regis\ncpf: 05073372980\nnascimento: 1986-06-06\npossui_cadastro: sim\nespecialidade: cardiologia\nplano_saude: particular\nmedico_preferencia: sim\n</DADOS>\n\nVocê deve responder APENAS:\n\n\"Certo, vou verificar os horários disponíveis para você. Só um instante, por favor.\"\n\nNÃO pedir nenhum dado novamente.\n\n---\n\n# 3️⃣ NOVO PACIENTE (possui_cadastro = \"nao\")\n\nNÃO use a frase “Perfeito, encontrei seu cadastro aqui 😊”.\n\n1. Se especialidade é null →  \n   \"Perfeito 😊 Com qual especialidade você deseja marcar?\"\n\n2. Senão, se plano_saude é null →  \n   \"A consulta será particular ou pelo plano de saúde?\"\n\n3. Senão, se medico_preferencia é null →  \n   \"Você tem preferência por algum médico da clínica?\"\n\n4. Senão, se nome é null →  \n   \"Perfeito! Agora me informe seu nome completo.\"\n\n5. Senão, se cpf é null →  \n   \"Obrigado! Agora me informe seu CPF, por favor.\"\n\n6. Senão, se nascimento é null →  \n   \"E qual é a sua data de nascimento?\"\n\n7. Senão →  \n   \"Certo, vou verificar os horários disponíveis para você. Só um instante, por favor.\"\n\n---\n\n# 4️⃣ ESCOLHA DE HORÁRIO\nSe o paciente indicar escolha de horário, como:\n\nquero 15h  \npode ser amanhã às 10  \nprefiro 09:00  \nesse horário está bom  \n\nResponder somente:\n\n\"Perfeito! Vou confirmar sua consulta nesse horário para você.\"\n\nE encerrar.\n\n---\n\n# 5️⃣ DÚVIDAS FORA DO FLUXO\nResponder em até 1 frase e voltar ao próximo campo null:\n\nExemplo:\n\nPaciente: \"Vocês fazem exames?\"\nAgente: \"Fazemos sim 😊 conforme solicitação médica. Agora, por favor, me diga: a consulta será particular ou pelo plano de saúde?\"\n\n---\n\n# ⚙️ REGRAS GERAIS\n- Nunca pular etapas\n- Nunca oferecer horários diretamente\n- Nunca repetir perguntas de campos preenchidos\n- Nunca usar histórico fora do JSON\n- Sempre seguir o algoritmo: verificar campo null → perguntar → avançar\n- Sempre responder com naturalidade, acolhimento e clareza\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        4816,
+        832
+      ],
+      "id": "68901355-1406-4d9e-88c5-3ea0283a32db",
+      "name": "Assistente comercial"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.1,
+          "topP": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        5184,
+        1088
+      ],
+      "id": "84bd1cde-7340-40a7-b7be-0c0e40be6c80",
+      "name": "DeepSeek Chat Model2",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "2fFfirWrLEfRHahC",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=context554884508723@s.whatsapp.net",
+        "sessionTTL": 1209600,
+        "contextWindowLength": 25
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        5408,
+        1104
+      ],
+      "id": "1bafaa91-9a30-433c-bfa4-715e5bb1c028",
+      "name": "Redis Chat Memory6",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Com base nas respostas do <ASSISTENTE>, identifique qual setor o atendimento deve ser transferido\n\n<ASSISTENTE>\n{{ $('Assistente comercial').item.json.output }}\n</ASSISTENTE>",
+        "options": {
+          "systemMessage": "=Você é o **Agente Classificador da Clínica Vida Plena**.\n\nSua função é analisar APENAS:\n1) A **ÚLTIMA mensagem enviada pelo ASSISTENTE COMERCIAL**\n2) Os valores dos campos JSON fornecidos abaixo\n\nE então retornar **somente um JSON** com o campo `\"setor\"`.\n\nNUNCA use a mensagem do paciente.\nNUNCA use histórico.\nNUNCA explique.\nNUNCA envie nada fora do JSON.\n\n---\n\n# 🧠 DADOS ATUAIS DO CADASTRO (JSON)\n\nnome: {{ $('Dados consulta1').item.json.nome }}\ncpf: {{ $('Dados consulta1').item.json.cpf_cnpj }}\nnascimento: {{ $('Dados consulta1').item.json.nascimento }}\nespecialidade: {{ $('valida dados identificados').item.json.especialidade }}\nplano_saude: {{ $('valida dados identificados').item.json.plano_saude }}\nmedico_preferencia: {{ $('valida dados identificados').item.json.medico_preferencia }}\n\nEstes dados podem estar preenchidos ou null.\nUse somente eles.\n\n---\n\n# 🧠 MENSAGEM ANALISADA\nA mensagem que você deve classificar é **EXCLUSIVAMENTE a última mensagem enviada pelo assistente comercial**, passada como:\n\n<ASSISTENTE>\n{{ $('Assistente comercial').item.json.output }}\n</ASSISTENTE>\n\nVocê deve analisar **somente o conteúdo dentro de <ASSISTENTE>...</ASSISTENTE>**.\n\n---\n\n# 🎯 OBJETIVO\nDetermine para qual setor encaminhar:\n\n1) \"checa_calendario\"\n2) \"agendar_consulta\"\n3) \"cancelar_consulta\"\n4) \"reagendar_consulta\"\n5) \"atendimento_geral\"\n\n---\n\n# 🧱 1) REGRA DO CHECA_CALENDARIO  \nRetorne:\n\n{\n  \"setor\": \"checa_calendario\"\n}\n\nSe a última mensagem do assistente comercial indicar que **vai consultar horários**, incluindo frases como:\n\n- \"Vou te encaminhar agora para o setor responsável por verificar os horários\"\n- \"consultar os horários disponíveis\"\n- \"verificar os horários\"\n- \"verificar agenda\"\n- \"um instante enquanto consulto os horários\"\n\n---\n\n# 🕒 2) REGRA DO AGENDAR_CONSULTA\nRetorne:\n\n{\n  \"setor\": \"agendar_consulta\"\n}\n\nSe a última mensagem do assistente comercial indicar que **o paciente escolheu um horário** ou que **vai encaminhar para agendamento**, incluindo frases como:\n\n- \"Vou encaminhar seu atendimento para finalizar o agendamento\"\n- \"Encaminhando para agendamento\"\n- \"Perfeito! Agora vou finalizar seu agendamento\"\n- \"Vou te transferir para agendar\"\n\nE TODOS estes campos não forem null:\n- nome  \n- cpf  \n- nascimento  \n- especialidade  \n- plano_saude  \n- medico_preferencia  \n\nE horario_escolhido = null.\n\n---\n\n# ❌ 3) REGRA DO CANCELAR_CONSULTA\nRetorne:\n\n{\n  \"setor\": \"cancelar_consulta\"\n}\n\nSe a última mensagem do assistente comercial incluir frases como:\n\n- \"Vou encaminhar para o setor responsável pelo cancelamento\"\n- \"Encaminhando para cancelamento\"\n- \"Certo, vou cancelar\"\n- \"Encaminhando o cancelamento\"\n- \"Te redirecionando para cancelar a consulta\"\n\n---\n\n# 🔄 4) REGRA DO REAGENDAR_CONSULTA\nRetorne:\n\n{\n  \"setor\": \"reagendar_consulta\"\n}\n\nSe a última mensagem do assistente comercial incluir frases como:\n\n- \"Vou encaminhar para o setor de reagendamento\"\n- \"Encaminhando para remarcar\"\n- \"Vou te transferir para trocar o horário\"\n- \"Encaminhando para remarcar consulta\"\n\n---\n\n# 🟫 5) REGRA DO ATENDIMENTO_GERAL\nRetorne:\n\n{\n  \"setor\": \"atendimento_geral\"\n}\n\nQuando:\n- a última mensagem do assistente comercial ainda está coletando dados  \n- o assistente fez perguntas de cadastro  \n- o assistente fez perguntas de plano, nome, cpf, nascimento etc.  \n- a mensagem não contém intenção de agenda/cancelamento/agendamento  \n- há qualquer campo obrigatório null  \n- o assistente está seguindo o fluxo normal de identificação\n\nExemplos de mensagens que ativam atendimento_geral:\n- \"Qual especialidade você deseja marcar?\"\n- \"Por favor, me informe seu nome completo.\"\n- \"A consulta será particular ou pelo plano?\"\n- \"Qual é a sua data de nascimento?\"\n\n---\n\n# 🚨 REGRAS FINAIS\n- Você sempre retorna SOMENTE:\n\n{\n  \"setor\": \"xxxx\"\n}\n\n- Nunca envie texto extra.\n- Nunca diga \"aqui está\".\n- Nunca explique.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        5216,
+        832
+      ],
+      "id": "e506b7c1-505b-4943-9564-aaa0f9672227",
+      "name": "Informações ou agendamentos1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=context554884508723@s.whatsapp.net",
+        "sessionTTL": 1209600,
+        "contextWindowLength": 30
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        4912,
+        1104
+      ],
+      "id": "c9edbb4f-97c7-415a-bea1-20f889be5173",
+      "name": "Redis Chat Memory8",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.parseJson().setor }}",
+                    "rightValue": "atendimento_geral",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "cc9eca64-1621-415a-a5fe-e95693e5f792"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "atendimento geral"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e333ff95-05c5-4347-9cfb-5bd689a6da73",
+                    "leftValue": "={{ $json.output.parseJson().setor }}",
+                    "rightValue": "checa_calendario",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "checar calendario"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5e41a602-8a2b-473c-b35c-60d6c94ccd25",
+                    "leftValue": "={{ $json.output.parseJson().setor }}",
+                    "rightValue": "agendar_consulta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "agendar consulta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8150a804-bc84-4cba-bc19-b9bf5b019ec4",
+                    "leftValue": "={{ $json.output.parseJson().setor }}",
+                    "rightValue": "cancelar_consulta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cancelar consulta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "16df4234-a10b-40fb-8741-11149791633c",
+                    "leftValue": "={{ $json.output.parseJson().setor }}",
+                    "rightValue": "reagendar_consulta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reagendar consulta"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        5616,
+        784
+      ],
+      "id": "d5713b07-7b59-4cb1-b48c-a5e97dfce5d1",
+      "name": "Switch"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        6912,
+        368
+      ],
+      "id": "198f4c8f-eaaf-4061-ad78-447a176a1819",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM clientes\nWHERE cpf_cnpj = COALESCE($1, '-1')\nAND $1 IS NOT NULL;",
+        "options": {
+          "queryReplacement": "={{ [ $('salva dados').item.json.cpf || null] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3664,
+        704
+      ],
+      "id": "23db8ce9-a96d-42a4-afb1-06a04f788e9e",
+      "name": "Consulta cliente",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "arYacY27pDiHcs5s",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {
+          "responseFormat": "text",
+          "temperature": 0,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        4688,
+        1040
+      ],
+      "id": "cbd10942-d501-426e-996c-9ffe0739ad0b",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "mh3lGjR5Byg7EG6P",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "sfGjr2MpSoaPw3ua",
+          "mode": "list",
+          "cachedResultName": "Clinca Assist Agenda Consulta"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        6800,
+        1248
+      ],
+      "id": "3b48c6c2-9a69-4538-ae8d-be7af12aca60",
+      "name": "Agenda consulta"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1da297e3-db11-4684-b80b-809f7c0f360a",
+              "leftValue": "={{ $('valida dados identificados').item.json.possui_cadastro }}",
+              "rightValue": "sim",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "45cab827-9ed0-424e-988e-b18c7b5fda8a",
+              "leftValue": "={{ $('valida dados identificados').item.json.possui_cadastro }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3408,
+        848
+      ],
+      "id": "2874582c-00b1-4322-bf05-effd33c90aed",
+      "name": "Possui cadastro?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c37fa7b5-78b4-4770-9a1d-6196ca483a23",
+              "name": "output",
+              "value": "={{ $('Assistente comercial').item.json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6656,
+        368
+      ],
+      "id": "91a4ec10-69e8-436d-abee-06e34f250be4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1984,
+        1040
+      ],
+      "id": "51167ef0-ac5f-4616-b36f-5e05cfd59557",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "mh3lGjR5Byg7EG6P",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "estadoAtual",
+        "key": "=dados{{ $json.numero }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        848
+      ],
+      "id": "16690906-1410-47b0-b7ba-68b37bb63be3",
+      "name": "busca dados",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pega o valor bruto vindo do nó anterior (ex: Redis → \"estadoAtual\" ou diretamente o JSON)\nlet redisValue =\n  $input.first().json.estadoAtual ??\n  $input.first().json.data ??\n  $input.first().json;\n\n// Objeto de estado\nlet estadoAtual;\n\n// Se veio algo do Redis\nif (redisValue) {\n  if (typeof redisValue === 'string') {\n    // Se for string, tenta fazer parse\n    try {\n      estadoAtual = JSON.parse(redisValue);\n    } catch (e) {\n      // Se der erro no parse, cria estado inicial\n      estadoAtual = null;\n    }\n  } else if (typeof redisValue === 'object') {\n    // Se já for objeto, usa direto\n    estadoAtual = redisValue;\n  } else {\n    estadoAtual = null;\n  }\n}\n\n// Se ainda não houver estado (primeiro atendimento ou erro no parse), cria JSON inicial\nif (!estadoAtual || typeof estadoAtual !== 'object') {\n  estadoAtual = {\n    nome: null,\n    cpf: null,\n    nascimento: null,\n    possui_cadastro: null,\n    plano_saude: null,\n    especialidade: null,\n    medico_preferencia: null,\n    nome_medico: null,\n    status_conversa: null // \"ativa\" | \"encerrada\" – controlado fora deste nó\n  };\n} else {\n  // Garante que todos os campos existam mesmo se o Redis devolveu parcial\n  if (!Object.prototype.hasOwnProperty.call(estadoAtual, 'nome')) estadoAtual.nome = null;\n  if (!Object.prototype.hasOwnProperty.call(estadoAtual, 'cpf')) estadoAtual.cpf = null;\n  if (!Object.prototype.hasOwnProperty.call(estadoAtual, 'nascimento')) estadoAtual.nascimento = null;\n  if (!Object.prototype.hasOwnProperty.call(estadoAtual, 'possui_cadastro')) estadoAtual.possui_cadastro = null;\n  if (!Object.prototype.hasOwnProperty.call(estadoAtual, 'plano_saude')) estadoAtual.plano_saude = null;\n  if (!Object.prototype.hasOwnProperty.call(estadoAtual, 'especialidade')) estadoAtual.especialidade = null;\n  if (!Object.prototype.hasOwnProperty.call(estadoAtual, 'medico_preferencia')) estadoAtual.medico_preferencia = null;\n  if (!Object.prototype.hasOwnProperty.call(estadoAtual, 'nome_medico')) estadoAtual.nome_medico = null;\n  if (!Object.prototype.hasOwnProperty.call(estadoAtual, 'status_conversa')) estadoAtual.status_conversa = null;\n}\n\n// Retorna no formato esperado pelo fluxo (outros nós usam .json.estadoAtual)\nreturn [{\n  json: { estadoAtual }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        848
+      ],
+      "id": "4e5b0cb2-8c0d-42ea-ab03-fdcf04370a5f",
+      "name": "valida dados"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1) Resposta bruta do modelo (node \"Identifica dados\")\nconst raw = $('Identifica dados').first().json.output || \"\";\n\n// 2) Estado salvo vindo do Redis (node \"busca dados\")\nlet estadoBruto =\n  $('busca dados').first().json.estadoAtual ??\n  $('busca dados').first().json.data ??\n  $('busca dados').first().json;\n\n// 3) Garante que estadoBruto vire um OBJETO (se vier string, faz parse)\nlet estadoAtual = null;\n\nif (typeof estadoBruto === 'string') {\n  try {\n    estadoAtual = JSON.parse(estadoBruto);\n  } catch (e) {\n    estadoAtual = null;\n  }\n} else if (estadoBruto && typeof estadoBruto === 'object') {\n  estadoAtual = estadoBruto;\n}\n\n// 4) Se ainda não houver estado (primeiro atendimento), cria JSON inicial\nif (!estadoAtual) {\n  estadoAtual = {\n    nome: null,\n    cpf: null,\n    nascimento: null,\n    possui_cadastro: null,\n    plano_saude: null,\n    especialidade: null,\n    medico_preferencia: null,\n    nome_medico: null,\n    // novo campo de controle vindo do Redis / fluxo externo\n    status_conversa: null // \"ativa\" | \"encerrada\" (definido fora deste nó)\n  };\n} else {\n  // garante que o campo exista mesmo se o JSON antigo não tiver\n  if (!Object.prototype.hasOwnProperty.call(estadoAtual, 'status_conversa')) {\n    estadoAtual.status_conversa = null;\n  }\n}\n\n// 5) Função: valida se a saída do modelo é um JSON válido\nfunction isValidJson(texto) {\n  const t = texto.trim();\n\n  // tem que começar e terminar com chaves\n  if (!t.startsWith(\"{\") || !t.endsWith(\"}\")) return false;\n\n  // rejeita ISO datetime e horários simples\n  if (t.match(/\\d{4}-\\d{2}-\\d{2}T\\d{2}:/)) return false; // ISO\n  if (t.match(/\"(\\d{1,2}:\\d{2})\"/)) return false;        // \"09:00\"\n\n  let json;\n  try {\n    json = JSON.parse(t);\n  } catch (e) {\n    return false;\n  }\n\n  const obrigatorios = [\n    \"nome\",\n    \"cpf\",\n    \"nascimento\",\n    \"possui_cadastro\",\n    \"plano_saude\",\n    \"especialidade\",\n    \"medico_preferencia\",\n    \"nome_medico\"\n    // status_conversa NÃO entra aqui porque é controlado externamente\n  ];\n\n  for (const campo of obrigatorios) {\n    if (!(campo in json)) return false;\n  }\n\n  return true;\n}\n\n// 6) Decide se usa o JSON novo ou continua com o estado salvo\nlet saida;\n\nif (isValidJson(raw)) {\n  const novoJson = JSON.parse(raw);\n\n  // 🚩 GARANTE QUE O STATUS DA CONVERSA NÃO SE PERDE\n  // se o estado antigo tinha status_conversa, preserva\n  if (\n    estadoAtual &&\n    Object.prototype.hasOwnProperty.call(estadoAtual, 'status_conversa') &&\n    !Object.prototype.hasOwnProperty.call(novoJson, 'status_conversa')\n  ) {\n    novoJson.status_conversa = estadoAtual.status_conversa;\n  }\n\n  saida = novoJson;\n} else {\n  // modelo mandou horário/lixo → usa dados salvos (que já têm status_conversa)\n  saida = estadoAtual;\n}\n\n// 7) Retorno no formato que o n8n exige\nreturn [\n  {\n    json: saida\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2416,
+        848
+      ],
+      "id": "9b20185b-84d5-4367-b336-91db4684c0c2",
+      "name": "valida dados identificados"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=dados{{ $('Extrai dados relevantes').item.json.numero }}",
+        "value": "={{ JSON.stringify({\n  nome: $json.nome,\n  cpf: $json.cpf,\n  nascimento: $json.nascimento,\n  possui_cadastro: $json.possui_cadastro,\n  plano_saude: $json.plano_saude,\n  especialidade: $json.especialidade,\n  medico_preferencia: $json.medico_preferencia,\n  nome_medico: $json.medico,\n  status_conversa: $json.status\n}) }}\n"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3168,
+        848
+      ],
+      "id": "612981c0-22b3-475b-a207-76cf9e0a659e",
+      "name": "salva dados",
+      "alwaysOutputData": true,
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0749b9da-fab4-4c95-8246-6ea984180134",
+              "name": "nome",
+              "value": "={{ $('valida dados identificados').item.json.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "eaa0a1bf-03f6-4083-a219-213569ca14b5",
+              "name": "cpf",
+              "value": "={{ $('valida dados identificados').item.json.cpf }}",
+              "type": "string"
+            },
+            {
+              "id": "b4648f82-c03f-4c2c-81f3-5c118f53b712",
+              "name": "nascimento",
+              "value": "={{ $('valida dados identificados').item.json.nascimento }}",
+              "type": "string"
+            },
+            {
+              "id": "3c875b25-ab63-4944-ab5a-13128c123fa1",
+              "name": "possui_cadastro",
+              "value": "={{ $('valida dados identificados').item.json.possui_cadastro }}",
+              "type": "string"
+            },
+            {
+              "id": "20a47d93-0fbc-46e6-ad8e-117e5a0053eb",
+              "name": "plano_saude",
+              "value": "={{ $('valida dados identificados').item.json.plano_saude }}",
+              "type": "string"
+            },
+            {
+              "id": "e38e041b-7239-4415-9976-b2d3ef8e4b7c",
+              "name": "medico_preferencia",
+              "value": "={{ $('valida dados identificados').item.json.medico_preferencia }}",
+              "type": "string"
+            },
+            {
+              "id": "f21d152f-8ba4-42ff-96e8-ed00b240793e",
+              "name": "medico",
+              "value": "={{ $json.output.parseJson().nome_medico ??  $('valida dados identificados').item.json.nome_medico}}",
+              "type": "string"
+            },
+            {
+              "id": "64f41c89-5daa-4f06-a01d-011437891e23",
+              "name": "especialidade",
+              "value": "={{ $('valida dados identificados').item.json.especialidade }}",
+              "type": "string"
+            },
+            {
+              "id": "ff1eceb3-3b66-477e-a834-5bb7514cc95b",
+              "name": "status_conversa",
+              "value": "={{ $('valida dados identificados').item.json.status_conversa }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2960,
+        848
+      ],
+      "id": "b92cdf1b-8460-4d97-bb08-4a30989ff4b1",
+      "name": "Dados consulta"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=dados{{ $('Extrai dados relevantes').item.json.numero }}",
+        "value": "={{ JSON.stringify({\n  nome: $json.nome || null,\n  cpf: $json.cpf_cnpj || null,\n  nascimento: $json.nascimento || null,\n  possui_cadastro: $json.possui_cadastro || null,\n  plano_saude: $json.plano_saude || null,\n  especialidade: $json.especialidade || null,\n  medico_preferencia: $json.medico_preferencia || null,\n  nome_medico: $json.medico || null,\n  status_conversa: $json.status || null\n}) }}\n"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4464,
+        832
+      ],
+      "id": "ca807bd7-d86c-45e2-a5f3-d89dbaa95e10",
+      "name": "salva dados1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5174c4c-e6ce-4552-9afe-b46164d00df7",
+              "name": "id",
+              "value": "={{ $json.id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "e9d75524-1ce5-4af2-b041-8e4b337b1e5a",
+              "name": "cpf_cnpj",
+              "value": "={{ $json.cpf_cnpj || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "ec58b727-200d-4381-8de6-e203453f7345",
+              "name": "nome",
+              "value": "={{ $json.nome || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "695eeb81-1bb1-4bfc-b311-908c2ba5eac2",
+              "name": "nascimento",
+              "value": "={{ $json.nascimento?.toDateTime()?.format('yyyy-MM-dd') || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "15c39565-7fb2-4479-a037-90a9e9f72384",
+              "name": "contato",
+              "value": "={{ $json.contato || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "d3b6e168-31c1-45a1-b519-37088a35864a",
+              "name": "possui_cadastro",
+              "value": "={{ $('salva dados').item.json.possui_cadastro }}",
+              "type": "string"
+            },
+            {
+              "id": "8bbdc8a5-6bb9-4470-a70e-ecb8ac1ccd51",
+              "name": "plano_saude",
+              "value": "={{ $('salva dados').item.json.plano_saude }}",
+              "type": "string"
+            },
+            {
+              "id": "2f5bbc38-02d0-4c80-8d25-d22ed30e5291",
+              "name": "medico_preferencia",
+              "value": "={{ $('salva dados').item.json.medico_preferencia }}",
+              "type": "string"
+            },
+            {
+              "id": "09011f6c-3dc4-4a24-8d62-f9b3f069cdc7",
+              "name": "medico",
+              "value": "={{ $('salva dados').item.json.medico }}",
+              "type": "string"
+            },
+            {
+              "id": "10c1ad9b-375a-48c7-9ec3-feb080a1ab3e",
+              "name": "especialidade",
+              "value": "={{ $('salva dados').item.json.especialidade }}",
+              "type": "string"
+            },
+            {
+              "id": "d89df210-97f1-4260-86bd-38d6ea2b91f1",
+              "name": "status_conversa",
+              "value": "={{ $('Dados consulta').item.json.status_conversa }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4208,
+        832
+      ],
+      "id": "d5e1d634-2928-4082-9b09-60a92b650040",
+      "name": "Dados consulta1"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=dados{{ $('Extrai dados relevantes').item.json.numero }}",
+        "value": "={{ JSON.stringify({\n  nome: $json.nome || null,\n  cpf: $json.cpf_cnpj || null,\n  nascimento: $json.nascimento || null,\n  possui_cadastro: $json.possui_cadastro || null,\n  plano_saude: $json.plano_saude || null,\n  especialidade: $json.especialidade || null,\n  medico_preferencia: $json.medico_preferencia || null,\n  nome_medico: $json.medico || null,\n  status_conversa: $json.status_conversa || null\n}) }}\n"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        6416,
+        368
+      ],
+      "id": "f43d3f59-a561-4b16-a6d1-d48eaa037196",
+      "name": "atualiza status",
+      "alwaysOutputData": true,
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5174c4c-e6ce-4552-9afe-b46164d00df7",
+              "name": "id",
+              "value": "={{ $('salva dados1').item.json.id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "e9d75524-1ce5-4af2-b041-8e4b337b1e5a",
+              "name": "cpf_cnpj",
+              "value": "={{ $('salva dados1').item.json.cpf_cnpj || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "ec58b727-200d-4381-8de6-e203453f7345",
+              "name": "nome",
+              "value": "={{ $('salva dados1').item.json.nome || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "695eeb81-1bb1-4bfc-b311-908c2ba5eac2",
+              "name": "nascimento",
+              "value": "={{ $('salva dados1').item.json.nascimento?.toDateTime()?.format('yyyy-MM-dd') || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "15c39565-7fb2-4479-a037-90a9e9f72384",
+              "name": "contato",
+              "value": "={{ $('salva dados1').item.json.contato || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "d3b6e168-31c1-45a1-b519-37088a35864a",
+              "name": "possui_cadastro",
+              "value": "={{ $('salva dados1').item.json.possui_cadastro || null}}",
+              "type": "string"
+            },
+            {
+              "id": "8bbdc8a5-6bb9-4470-a70e-ecb8ac1ccd51",
+              "name": "plano_saude",
+              "value": "={{ $('salva dados1').item.json.plano_saude || null }}",
+              "type": "string"
+            },
+            {
+              "id": "2f5bbc38-02d0-4c80-8d25-d22ed30e5291",
+              "name": "medico_preferencia",
+              "value": "={{ $('salva dados1').item.json.medico_preferencia || null }}",
+              "type": "string"
+            },
+            {
+              "id": "09011f6c-3dc4-4a24-8d62-f9b3f069cdc7",
+              "name": "medico",
+              "value": "={{ $('salva dados1').item.json.medico || null }}",
+              "type": "string"
+            },
+            {
+              "id": "10c1ad9b-375a-48c7-9ec3-feb080a1ab3e",
+              "name": "especialidade",
+              "value": "={{ $('salva dados1').item.json.especialidade || null }}",
+              "type": "string"
+            },
+            {
+              "id": "d89df210-97f1-4260-86bd-38d6ea2b91f1",
+              "name": "status_conversa",
+              "value": "=ativo",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6208,
+        368
+      ],
+      "id": "aeeeab65-0a4b-4921-a0de-41bce4105243",
+      "name": "Dados consulta2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5174c4c-e6ce-4552-9afe-b46164d00df7",
+              "name": "id",
+              "value": "={{ $('salva dados1').item.json.id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "e9d75524-1ce5-4af2-b041-8e4b337b1e5a",
+              "name": "cpf_cnpj",
+              "value": "={{ $('salva dados1').item.json.cpf_cnpj || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "ec58b727-200d-4381-8de6-e203453f7345",
+              "name": "nome",
+              "value": "={{ $('salva dados1').item.json.nome || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "695eeb81-1bb1-4bfc-b311-908c2ba5eac2",
+              "name": "nascimento",
+              "value": "={{ $('salva dados1').item.json.nascimento?.toDateTime()?.format('yyyy-MM-dd') || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "15c39565-7fb2-4479-a037-90a9e9f72384",
+              "name": "contato",
+              "value": "={{ $('salva dados1').item.json.contato || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "d3b6e168-31c1-45a1-b519-37088a35864a",
+              "name": "possui_cadastro",
+              "value": "={{ $('salva dados1').item.json.possui_cadastro || null}}",
+              "type": "string"
+            },
+            {
+              "id": "8bbdc8a5-6bb9-4470-a70e-ecb8ac1ccd51",
+              "name": "plano_saude",
+              "value": "={{ $('salva dados1').item.json.plano_saude || null }}",
+              "type": "string"
+            },
+            {
+              "id": "2f5bbc38-02d0-4c80-8d25-d22ed30e5291",
+              "name": "medico_preferencia",
+              "value": "={{ $('salva dados1').item.json.medico_preferencia || null }}",
+              "type": "string"
+            },
+            {
+              "id": "09011f6c-3dc4-4a24-8d62-f9b3f069cdc7",
+              "name": "medico",
+              "value": "={{ $('salva dados1').item.json.medico || null }}",
+              "type": "string"
+            },
+            {
+              "id": "10c1ad9b-375a-48c7-9ec3-feb080a1ab3e",
+              "name": "especialidade",
+              "value": "={{ $('salva dados1').item.json.especialidade || null }}",
+              "type": "string"
+            },
+            {
+              "id": "d89df210-97f1-4260-86bd-38d6ea2b91f1",
+              "name": "status_conversa",
+              "value": "=encerrado",
+              "type": "string"
+            },
+            {
+              "id": "e5aec4fe-46d7-48c1-980d-3f6680479ebb",
+              "name": "mensagem",
+              "value": "={{ $('Extrai dados relevantes').item.json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "59076769-f3fc-4e0c-a1e3-23f366b749cf",
+              "name": "url",
+              "value": "={{ $('Extrai dados relevantes').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "513fb77c-ab9c-4478-90ee-f7431c4a959b",
+              "name": "token",
+              "value": "={{ $('Extrai dados relevantes').item.json.token }}",
+              "type": "string"
+            },
+            {
+              "id": "38b83be3-6e59-436e-bd65-c02f66ce4b22",
+              "name": "id_conversa",
+              "value": "={{ $('Extrai dados relevantes').item.json.id_conversa }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6304,
+        1248
+      ],
+      "id": "d4d17b98-17b9-4d00-8244-0b7c65ca4d39",
+      "name": "Dados consulta3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5174c4c-e6ce-4552-9afe-b46164d00df7",
+              "name": "id",
+              "value": "={{ $('salva dados1').item.json.id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "e9d75524-1ce5-4af2-b041-8e4b337b1e5a",
+              "name": "cpf_cnpj",
+              "value": "={{ $('salva dados1').item.json.cpf_cnpj || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "ec58b727-200d-4381-8de6-e203453f7345",
+              "name": "nome",
+              "value": "={{ $('salva dados1').item.json.nome || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "695eeb81-1bb1-4bfc-b311-908c2ba5eac2",
+              "name": "nascimento",
+              "value": "={{ $('salva dados1').item.json.nascimento?.toDateTime()?.format('yyyy-MM-dd') || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "15c39565-7fb2-4479-a037-90a9e9f72384",
+              "name": "contato",
+              "value": "={{ $('salva dados1').item.json.contato || null  }}",
+              "type": "string"
+            },
+            {
+              "id": "d3b6e168-31c1-45a1-b519-37088a35864a",
+              "name": "possui_cadastro",
+              "value": "={{ $('salva dados1').item.json.possui_cadastro || null}}",
+              "type": "string"
+            },
+            {
+              "id": "8bbdc8a5-6bb9-4470-a70e-ecb8ac1ccd51",
+              "name": "plano_saude",
+              "value": "={{ $('salva dados1').item.json.plano_saude || null }}",
+              "type": "string"
+            },
+            {
+              "id": "2f5bbc38-02d0-4c80-8d25-d22ed30e5291",
+              "name": "medico_preferencia",
+              "value": "={{ $('salva dados1').item.json.medico_preferencia || null }}",
+              "type": "string"
+            },
+            {
+              "id": "09011f6c-3dc4-4a24-8d62-f9b3f069cdc7",
+              "name": "medico",
+              "value": "={{ $('salva dados1').item.json.medico || null }}",
+              "type": "string"
+            },
+            {
+              "id": "10c1ad9b-375a-48c7-9ec3-feb080a1ab3e",
+              "name": "especialidade",
+              "value": "={{ $('salva dados1').item.json.especialidade || null }}",
+              "type": "string"
+            },
+            {
+              "id": "d89df210-97f1-4260-86bd-38d6ea2b91f1",
+              "name": "status_conversa",
+              "value": "=ativo",
+              "type": "string"
+            },
+            {
+              "id": "ff2e8156-dfe5-4abd-a2dc-3191d1b542e6",
+              "name": "intencao",
+              "value": "={{ $json.output.parseJson().setor }}",
+              "type": "string"
+            },
+            {
+              "id": "bacbe6aa-da34-4c56-9fb3-81e1b502f18b",
+              "name": "mensagem",
+              "value": "={{ $('Extrai dados relevantes').item.json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "ecdb4be9-29c8-4f80-afd4-8034661eb2ce",
+              "name": "url",
+              "value": "={{ $('Extrai dados relevantes').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "42e16eee-24fe-4028-94c1-9cbbfbe7ecba",
+              "name": "token",
+              "value": "={{ $('Extrai dados relevantes').item.json.token }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6288,
+        1568
+      ],
+      "id": "ada22324-7751-429d-8f40-9168b33b7cde",
+      "name": "Dados consulta4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Extrai horario sugerido",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrai horario sugerido": {
+      "main": [
+        [
+          {
+            "node": "Dados4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrai dados relevantes": {
+      "main": [
+        [
+          {
+            "node": "busca dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salva dados consulta2": {
+      "main": [
+        []
+      ]
+    },
+    "Redis Chat Memory7": {
+      "ai_memory": [
+        [
+          {
+            "node": "Identifica dados",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identifica dados": {
+      "main": [
+        [
+          {
+            "node": "valida dados identificados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extrai horario sugerido",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados4": {
+      "main": [
+        [
+          {
+            "node": "Chama Assistente Checa Calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Identifica médico",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identifica médico": {
+      "main": [
+        [
+          {
+            "node": "Dados consulta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cadastra ou atualiza cliente": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Dados consulta1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Extrai dados relevantes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assistente comercial": {
+      "main": [
+        [
+          {
+            "node": "Informações ou agendamentos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Informações ou agendamentos1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory6": {
+      "ai_memory": [
+        [
+          {
+            "node": "Informações ou agendamentos1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Informações ou agendamentos1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory8": {
+      "ai_memory": [
+        [
+          {
+            "node": "Assistente comercial",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Dados consulta2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extrai horario sugerido",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Dados consulta3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Dados consulta4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Dados consulta4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta cliente": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Assistente comercial",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Possui cadastro?": {
+      "main": [
+        [
+          {
+            "node": "Consulta cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cadastra ou atualiza cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Identifica dados",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "busca dados": {
+      "main": [
+        [
+          {
+            "node": "valida dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valida dados": {
+      "main": [
+        [
+          {
+            "node": "Identifica dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valida dados identificados": {
+      "main": [
+        [
+          {
+            "node": "Identifica médico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salva dados": {
+      "main": [
+        [
+          {
+            "node": "Possui cadastro?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados consulta": {
+      "main": [
+        [
+          {
+            "node": "salva dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salva dados1": {
+      "main": [
+        [
+          {
+            "node": "Assistente comercial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados consulta1": {
+      "main": [
+        [
+          {
+            "node": "salva dados1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "atualiza status": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados consulta2": {
+      "main": [
+        [
+          {
+            "node": "atualiza status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados consulta3": {
+      "main": [
+        [
+          {
+            "node": "Agenda consulta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados consulta4": {
+      "main": [
+        [
+          {
+            "node": "Chama Assistente Cancela Visita",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "17c0d3e1-65e1-42b2-9cad-8c3e728bf138",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a70a1343a03530a452f4dec61f49dcb55af90d675b64a06d66352538d4bcf3b4"
+  },
+  "id": "aduCc0CaNGDpx85A",
+  "tags": []
+}

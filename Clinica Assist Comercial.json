@@ -1,0 +1,917 @@
+{
+  "name": "Clinica Assist Comercial",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Informações\n",
+        "height": 580,
+        "width": 780,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1424,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "6e9f3816-77bb-468c-bcb2-79f7dfdedb58",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO conversa_stand_by (contato, hora_ultima_conversa, finalizada)\nVALUES ($1, '{{$now}}', false)\nON CONFLICT (contato) DO UPDATE SET\n  hora_ultima_conversa = '{{ $now }}',\n  finalizada = false;\n",
+        "options": {
+          "queryReplacement": "={{ [$('Chamada').item.json.numero] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1504,
+        -304
+      ],
+      "id": "ef765ee4-1a06-4b40-9499-38c839b3186f",
+      "name": "Salva conversa stand by",
+      "credentials": {
+        "postgres": {
+          "id": "arYacY27pDiHcs5s",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<CLIENTE>\n{{ $('Assistente comercial2').item.json.output }}\n</CLIENTE>",
+        "options": {
+          "systemMessage": "=# IDENTIDADE\nVocê é especialista em identificar no contexto da conversa com o cliente se o atendimento encerrou ou não.\n\n# FUNÇÃO\nA sua função é classificar a situação do atendimento em **2 categorias**:\n\nClassifique a situação do atendimento em apenas uma das categorias abaixo:\n<CATEGORIAS> \n- **\"encerrado\"** → Quando a conversa já foi concluída e não requer nova resposta do cliente. \n- **\"nao_encerrado\"** → Quando ainda pode haver continuidade ou expectativa de resposta do cliente. \n</CATEGORIAS>\n\n# OUTPUT\nNão retorne nenhuma outra informação, apenas a situação do atendimento.\nVocê sempre irá responder usando o formato JSON contendo uma única *chave \"atendimento\"*.\n\n<EXEMPLO>\n{\"filtro\":\"encerrado\"}\n</EXEMPLO>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1008,
+        -448
+      ],
+      "id": "3bb5aef2-197f-41de-b2fa-c050704d9d33",
+      "name": "Identifica encerramento do atendimento"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2ca064cd-606b-4a35-b98c-0178bcb634d1",
+              "leftValue": "={{ $json.output.parseJson().atendimento }}",
+              "rightValue": "encerrado",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1312,
+        -448
+      ],
+      "id": "a7b5336f-8f9d-4a5e-9cb3-9410dadf35fd",
+      "name": "Atendimento encerrado?",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1925383-3822-4fa4-b0e2-a818e17350c9",
+              "name": "mensagem",
+              "value": "={{ $json.output.split('\\n') }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -944,
+        48
+      ],
+      "id": "6be5f4ee-4f81-41a3-b8ac-b3f066dde4a2",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -544,
+        48
+      ],
+      "id": "51fb8546-8ce6-44ac-aef1-6aab99e92b92",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        64
+      ],
+      "id": "0ae5df57-b61a-4906-8e85-51d180792dc2",
+      "name": "Wait1",
+      "webhookId": "c1780cc8-b690-4aed-95d6-e7dcecef171d"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1008,
+        -256
+      ],
+      "id": "d5ff8eeb-e7ab-421a-8aaf-3a960a473bc3",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "mh3lGjR5Byg7EG6P",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "mensagem",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        48
+      ],
+      "id": "9067390a-5c0c-4273-8e75-70ef5da847a7",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "content": "## Envia mensagem",
+        "height": 580,
+        "width": 1012,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -624,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "47876802-48b4-43dd-9585-03cbe89a5216",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Encerra atendimento?\n",
+        "height": 456,
+        "width": 720,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        944,
+        -592
+      ],
+      "typeVersion": 1,
+      "id": "c29736e7-ac3e-4058-839f-7edb93a6ddb1",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO conversa_stand_by (contato, hora_ultima_conversa, finalizada)\nVALUES ($1, '{{$now}}', false)\nON CONFLICT (contato) DO UPDATE SET\n  hora_ultima_conversa = '{{ $now }}',\n  finalizada = true;\n",
+        "options": {
+          "queryReplacement": "={{ [$('Chamada').item.json.numero] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1504,
+        -560
+      ],
+      "id": "f992fafd-ce85-4942-bee8-842807a98f55",
+      "name": "Salva conversa stand by2",
+      "credentials": {
+        "postgres": {
+          "id": "arYacY27pDiHcs5s",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        304
+      ],
+      "id": "e30b3504-0c5c-4802-93a2-0cd0c5b9645f",
+      "name": "Calculadora"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        368
+      ],
+      "id": "6b946dd3-f213-4ed5-af03-22a9f662bed6",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1360,
+        240
+      ],
+      "id": "29320950-1e10-4636-825d-21ef14b57f0f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "mh3lGjR5Byg7EG6P",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=context{{ $('Chamada').item.json.numero }}",
+        "sessionTTL": 1209600,
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        -1216,
+        272
+      ],
+      "id": "0f79610d-a593-417f-9cf5-5a882bc7261b",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2afdabf0-c79d-4177-b5d8-6744bb3c02a6",
+              "name": "mensagem",
+              "value": "={{ $('Loop Over Items').item.json.mensagem.replace(/\\n/g, \"\\\\n\") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        64
+      ],
+      "id": "b3c3934c-518c-42b6-9760-f6452e6da3c3",
+      "name": "Retira n"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Chat').item.json.url }}/message/sendText/{{ $('Chat').item.json.instancia }}",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\"apikey\":\"{{ $('Chat').item.json.apikey }}\"}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"number\":\"{{ $('Chat').item.json.numero }}\",\"text\":\"{{ $json.mensagem }}\",\"delay\":6000}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        -1152
+      ],
+      "id": "a7c2730f-e7e5-4301-bbef-57e8f8a76a69",
+      "name": "Envia mensagem"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Chamada').item.json.url }}/send/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "token",
+              "value": "={{ $('Chamada').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Chamada').item.json.numero.replaceAll(' ','').replaceAll('-','').replaceAll('+','') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.mensagem }}"
+            },
+            {
+              "name": "delay",
+              "value": "5000"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        64
+      ],
+      "id": "5f6560e7-e30a-4270-a150-8edd7d862146",
+      "name": "Envia mensagem1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=context{{ $('Chamada').item.json.numero }}",
+        "sessionTTL": 1209600,
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        1152,
+        -240
+      ],
+      "id": "4e2a7bf6-faec-4ede-b6d8-ca2ba28d2c41",
+      "name": "Redis Chat Memory2",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8e6d224f-2271-41f7-ac3f-275b38cd2bc0",
+              "name": "dados_consulta",
+              "value": "nome do cliente",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1248,
+        1104
+      ],
+      "id": "d7fc00af-fae3-48e1-b35b-88476e000c4b",
+      "name": "data da consulta"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -192
+      ],
+      "id": "e8aa3bc2-c15d-4ccc-a218-f3184b851d46",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1536,
+        48
+      ],
+      "id": "28208f2a-210b-4247-a04d-664da3c9ca38",
+      "name": "Chamada"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<CLIENTE>\n{{ $json.mensagens }}\n</CLIENTE>\n\n<SAUDACAO>\nsaudacao: {{ (() => {\n    const hora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: 'numeric' });\n    let saudacao = '';\n\n    if (hora >= 3 && hora < 12) {\n        saudacao = 'Bom dia';\n    } else if (hora >= 12 && hora < 19) {\n        saudacao = 'Boa tarde';\n    } else {\n        saudacao = 'Boa noite';\n    }\n\n    return saudacao;\n})() }}\n</SAUDACAO>",
+        "options": {
+          "systemMessage": "=# 🎯 MISSÃO DO AGENTE\nVocê é um agente de IA da **Clínica Vida Plena**, responsável por atender pacientes via WhatsApp.\\n\nSeu objetivo é **tirar dúvidas** e **conduzir o paciente até o agendamento**, fazendo **uma pergunta por vez**, de forma **humanizada, clara e acolhedora**.\\n\n**Nunca** avance para horários antes de coletar todos os dados obrigatórios.\n\n---\n\n# 🗣️ ESTILO E TOM DE VOZ\n- Linguagem natural, educada e acolhedora.  \n- Frases curtas e objetivas.  \n- Emojis leves permitidos (👋😊🩺💚).  \n- **Apenas uma pergunta por vez.**  \n- Sempre responder dúvidas e retornar ao fluxo.  \n- Evitar linguagem técnica.\n\n---\n\n# 🧠 CONTEXTO ATUAL DA CONVERSA (JSON)\nUse APENAS estes dados para decidir o próximo passo:\\n\nnome: {{ $('Chamada').item.json.nome }}\ncpf: {{ $('Chamada').item.json.cpf }}\nnascimento: {{ $('Chamada').item.json.nascimento }}\npossui_cadastro: {{ $('Chamada').item.json.possui_cadastro }}\nespecialidade: {{ $('Chamada').item.json.especialidade }}\nplano_saude: {{ $('Chamada').item.json.plano_saude }}\nmedico_preferencia: {{ $('Chamada').item.json.medico_preferencia }}\n\nO valor `null` significa que o paciente **ainda não informou** esse dado.\\n\n**Use apenas os valores do JSON para decidir o próximo passo.**  \n**Nunca use memória ou histórico da conversa.**\n\n---\n\n# 🧱 ORDEM OBRIGATÓRIA (HARD-STOP)\nO agente só pode avançar seguindo exatamente esta ordem:\n\n1️⃣ Apresentação + verificar se já é paciente  \n2️⃣ Especialidade  \n3️⃣ Tipo de atendimento (plano / particular)  \n4️⃣ Preferência por médico  \n5️⃣ Nome  \n6️⃣ CPF  \n7️⃣ Nascimento  \n8️⃣ Encaminhar para o setor de agenda  \n9️⃣ Confirmação final  \n\n🚫 **PROIBIDO** oferecer horários antes que TODOS ESTES CAMPOS estejam preenchidos:\n- nome  \n- cpf  \n- nascimento  \n- especialidade  \n- plano_saude  \n- medico_preferencia  \n\nSe o paciente pedir horários antes da hora, responda:  \n\"Claro 😊 Eu te mostro sim!\\nAntes, preciso concluir sua identificação. Por favor, me informe seu **[campo que ainda está null]**.\"\n\n---\n\n# 🚪 1️⃣ APRESENTAÇÃO E VERIFICAÇÃO DE CADASTRO\nSe `possui_cadastro` = null:\n\n\"Olá! 👋\\nSeja bem-vindo(a) à **Clínica Vida Plena**.\\nSou a assistente virtual da clínica e posso te ajudar com seu agendamento.\\nVocê já é paciente da clínica ou é a primeira vez que entra em contato?\"\n\n- Se disser que **já é paciente** → possui_cadastro = \"sim\"  \n- Se disser que é **a primeira vez** → possui_cadastro = \"nao\"\n\n---\n\n# 👨‍⚕️ 2️⃣ FLUXO PACIENTE EXISTENTE (possui_cadastro = \"sim\")\nPergunte somente os campos que estiverem **null**, sempre na ordem abaixo:\n\n1️⃣ cpf  \n\"Por favor, me informe seu CPF.\"  \n\n2️⃣ nome  \n\"Obrigado! Agora me diga seu nome completo, por favor.\"  \n\n3️⃣ nascimento  \n\"Para confirmar sua identificação, qual é a sua data de nascimento?\"  \n\n4️⃣ especialidade  \n\"Certo 😊 Qual especialidade médica você deseja marcar?\"  \n\n5️⃣ plano_saude  \n\"A consulta será particular ou pelo plano de saúde?\"  \n\n6️⃣ medico_preferencia  \n\"Você tem preferência por algum médico do nosso corpo clínico?\"  \n\n➡️ Quando todos os dados estiverem preenchidos:  \n\"Perfeito!\\nVou te encaminhar agora para o setor responsável por verificar os horários disponíveis.\\nUm instante ⏳\"\n\n---\n\n# 🆕 3️⃣ FLUXO NOVO PACIENTE (possui_cadastro = \"nao\")\nPergunte somente os campos que estiverem **null**, na ordem:\n\n1️⃣ especialidade  \n\"Perfeito 😊 Com qual especialidade médica você deseja marcar?\"\n\n2️⃣ plano_saude  \n\"A consulta será particular ou pelo plano de saúde?\"\n\n3️⃣ medico_preferencia  \n\"Você tem preferência por algum médico da nossa equipe?\"\n\n4️⃣ nome  \n\"Perfeito! Agora, por favor, me informe seu nome completo.\"\n\n5️⃣ cpf  \n\"Obrigado! Agora me informe seu CPF, por favor.\"\n\n6️⃣ nascimento  \n\"E qual é a sua data de nascimento?\"\n\n➡️ Quando todos os dados estiverem preenchidos:  \n\"Ótimo!\\nVou te encaminhar agora para o setor responsável por verificar os horários disponíveis.\\nUm instante ⏳\"\n\n---\n\n# 💬 DÚVIDAS DO PACIENTE\nSe o paciente perguntar qualquer coisa fora do fluxo:\n\n1️⃣ Responda em até **1 frase**.  \n2️⃣ Retorne imediatamente ao **próximo campo null**.  \n\nExemplo:  \nPaciente: \"Vocês fazem exames?\"  \nIA: \"Fazemos sim 😊 conforme solicitação médica.\\nAgora, por favor, me informe seu **[campo null]**.\"\n\n---\n\n# ⚙️ REGRAS GERAIS\n- Sempre seguir o JSON.  \n- Nunca pular etapas.  \n- Nunca oferecer horários antes da hora.  \n- Nunca usar histórico ou memória, apenas os campos do JSON.  \n- Quando finalizar o atendimento:  \n  \"A equipe responsável verificará agora os horários e retornará com a confirmação da consulta, incluindo **data, horário, profissional e endereço da clínica**.\"  "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -1312,
+        48
+      ],
+      "id": "7fd5d17d-9b32-4c7b-97cb-45fb135ed1cf",
+      "name": "Assistente comercial"
+    },
+    {
+      "parameters": {
+        "content": "## Recepção ",
+        "height": 420,
+        "width": 708
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        176,
+        -544
+      ],
+      "typeVersion": 1,
+      "id": "f79a2944-638d-48d5-865a-d609bf13f2e6",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Identifique qual setor o atendimento deve ser transferido\n\n<CLIENTE>\n{{ $('Chamada').item.json.mensagens }}\n</CLIENTE>",
+        "options": {
+          "systemMessage": "=Você é o **Agente Classificador da Clínica Vida Plena**.\n\nSua missão é analisar:\n1) A ÚLTIMA mensagem enviada pelo paciente.\n2) Os valores dos campos abaixo:\n\nnome: {{ $('Chamada').item.json.nome }}\ncpf: {{ $('Chamada').item.json.cpf }}\nnascimento: {{ $('Chamada').item.json.nascimento }}\nespecialidade: {{ $('Chamada').item.json.especialidade }}\nplano_saude: {{ $('Chamada').item.json.plano_saude }}\nmedico_preferencia: {{ $('Chamada').item.json.medico_preferencia }}\n\n---\n\n# 🎯 REGRAS DE CLASSIFICAÇÃO\n\n## ✅ 1) checa_calendario\nRetorne:\n{\n  \"setor\": \"checa_calendario\"\n}\n**Somente se TODOS os campos abaixo NÃO forem null:**\n- nome\n- cpf\n- nascimento\n- especialidade\n- plano_saude\n- medico_preferencia\n\nMesmo que o paciente pergunte outra coisa, se todos estiverem preenchidos → este é o setor correto.\n\n---\n\n## ❌ 2) cancelamento\nRetorne:\n{\n  \"setor\": \"cancelamento\"\n}\nSomente se o paciente expressar **claramente** intenção de:\n- cancelar\n- desmarcar\n- remover agendamento\n\n---\n\n## ⚠️ 3) atendimento_geral\nRetorne:\n{\n  \"setor\": \"atendimento_geral\"\n}\nEm qualquer um destes casos:\n- Ainda existe **qualquer** campo null\n- O paciente faz perguntas gerais\n- O paciente tenta agendar antes dos campos obrigatórios\n- A mensagem é irrelevante ou ambígua\n\n---\n\n# 🚨 REGRAS CRÍTICAS\n- Nunca invente campos.\n- Nunca use histórico, apenas os valores recebidos.\n- Nunca explique sua resposta.\n- Nunca envie texto adicional.\n\nA resposta DEVE SER APENAS:\n\n{\n  \"setor\": \"xxx\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        304,
+        -480
+      ],
+      "id": "10fa03eb-3be0-4813-91c0-9252f05c339c",
+      "name": "Informações ou agendamentos"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=context{{ $('Chamada').item.json.numero }}",
+        "sessionTTL": 1209600,
+        "contextWindowLength": 25
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        496,
+        -272
+      ],
+      "id": "97579917-2e7f-42f2-8770-414860815be4",
+      "name": "Redis Chat Memory5",
+      "credentials": {
+        "redis": {
+          "id": "4Q6dGgHJkdAxYegV",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.1,
+          "topP": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -288
+      ],
+      "id": "41b65fe7-1787-443c-bd94-f85890d55590",
+      "name": "DeepSeek Chat Model1",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "2fFfirWrLEfRHahC",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "atendimento",
+          "mode": "list",
+          "cachedResultName": "atendimento"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "contato": "={{ $('Chamada').item.json.numero }}",
+            "setor": "={{ $json.output.parseJson().setor }}"
+          },
+          "matchingColumns": [
+            "contato"
+          ],
+          "schema": [
+            {
+              "id": "contato",
+              "displayName": "contato",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "setor",
+              "displayName": "setor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        656,
+        -480
+      ],
+      "id": "fd951063-d40b-4a43-b1bf-5e48fb340c17",
+      "name": "Transfere setor",
+      "credentials": {
+        "postgres": {
+          "id": "arYacY27pDiHcs5s",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Chamada": [
+      {
+        "json": {
+          "mensagens": "Bom dia",
+          "numero": "554884508723@s.whatsapp.net",
+          "url": "https://work-less-ai.uazapi.com",
+          "token": "8b4701cb-f821-47f0-9c55-69fbf9069eb0",
+          "id": "554891632926:ACFBF7B58ADF21D9C1F0D5C94FF1A52D",
+          "especialidade": null,
+          "nome": null,
+          "medico": null,
+          "plano_saude": null,
+          "medico_preferencia": null,
+          "possui_cadastro": null,
+          "nascimento": null,
+          "cpf": null
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Identifica encerramento do atendimento": {
+      "main": [
+        [
+          {
+            "node": "Atendimento encerrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atendimento encerrado?": {
+      "main": [
+        [
+          {
+            "node": "Salva conversa stand by2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Salva conversa stand by",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Retira n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Identifica encerramento do atendimento",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculadora": {
+      "ai_tool": [
+        [
+          {
+            "node": "Assistente comercial",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "Assistente comercial",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Assistente comercial",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Assistente comercial",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retira n": {
+      "main": [
+        [
+          {
+            "node": "Envia mensagem1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia mensagem": {
+      "main": [
+        []
+      ]
+    },
+    "Envia mensagem1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "Identifica encerramento do atendimento",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "data da consulta": {
+      "main": [
+        []
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Informações ou agendamentos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salva conversa stand by": {
+      "main": [
+        []
+      ]
+    },
+    "Salva conversa stand by2": {
+      "main": [
+        []
+      ]
+    },
+    "Chamada": {
+      "main": [
+        [
+          {
+            "node": "Assistente comercial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assistente comercial": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory5": {
+      "ai_memory": [
+        [
+          {
+            "node": "Informações ou agendamentos",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Informações ou agendamentos",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Informações ou agendamentos": {
+      "main": [
+        [
+          {
+            "node": "Transfere setor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "0e696dac-4f7e-4c64-8533-04dfb65b8a9a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a70a1343a03530a452f4dec61f49dcb55af90d675b64a06d66352538d4bcf3b4"
+  },
+  "id": "1ucMFbb0NnfMqLwi",
+  "tags": []
+}
